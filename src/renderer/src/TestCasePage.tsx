@@ -208,6 +208,9 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
       <div className="composer">
         <div className="marker">＋</div>
         <div className="chips">
+          <button className="chip" onClick={() => window.api.pickImages()}>
+            画像
+          </button>
           {TEXT_BLOCKS.map((t) => (
             <button key={t} className="chip" onClick={() => setEditing({ type: t })}>
               {BLOCK_LABEL[t]}

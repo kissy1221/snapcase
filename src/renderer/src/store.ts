@@ -29,7 +29,11 @@ export const getManifest = manifestStore.get
 export const OVERVIEW = '@overview'
 const selStore = createStore<string>(OVERVIEW)
 export const useSelection = selStore.use
-export const select = selStore.set
+/** 選択を変え、ホットキーでの撮影先として main にも伝える。 */
+export const select = (v: string): void => {
+  selStore.set(v)
+  window.api.setSelection(v === OVERVIEW ? null : v)
+}
 export const getSelection = selStore.get
 
 export interface Toast {
@@ -45,3 +49,12 @@ export function toast(t: Toast | string): void {
   toastTimer = setTimeout(() => toastStore.set(null), 6000)
 }
 export const dismissToast = (): void => toastStore.set(null)
+
+window.api.onToast((t) =>
+  toast({
+    msg: t.msg,
+    action: t.undo
+      ? { label: '取り消し', run: () => window.api.apply({ t: 'undoLast' }) }
+      : undefined
+  })
+)

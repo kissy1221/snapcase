@@ -1,7 +1,8 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { registerIpc } from './ipc'
+import { registerIpc, unregisterShortcuts } from './ipc'
+import { state } from './state'
 import icon from '../../resources/icon.png?asset'
 
 function createWindow(): void {
@@ -25,6 +26,8 @@ function createWindow(): void {
     }
   })
 
+  state.mainWindow = mainWindow
+  mainWindow.on('closed', () => (state.mainWindow = null))
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
@@ -71,6 +74,8 @@ app.whenReady().then(() => {
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
+app.on('will-quit', unregisterShortcuts)
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()

@@ -3,6 +3,7 @@ import './assets/main.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import Editor from './Editor'
 
 document.documentElement.dataset.platform = /Mac/.test(navigator.platform)
   ? 'mac'
@@ -11,7 +12,5 @@ document.documentElement.dataset.platform = /Mac/.test(navigator.platform)
     : 'linux'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
+  <StrictMode>{location.hash === '#editor' ? <Editor /> : <App />}</StrictMode>
 )
