@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>証跡作ったったー UI モック</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1C2230; --ink2: #586174; --ink3: #8B93A4;
+  --paper: #F3F4F6; --surface: #FFFFFF; --rule: #E2E5EA;
+  --ai: #2C4BB8; --ai-soft: #E9EDFA;
+  --ok: #1F8A5B; --ng: #D2372F; --hold: #C98A12; --none: #B3B9C5;
+  --anno: #E5484D;
+  --font: "IBM Plex Sans JP", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+  --mono: "IBM Plex Mono", "BIZ UDGothic", monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--ink); background: #CDD1D8; padding: 48px; font-size: 14px; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+svg { flex: none; }
+.num { font-variant-numeric: tabular-nums; }
+.stage { display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start; }
+.caption { font-size: 13px; color: var(--ink2); margin-bottom: 10px; }
+.win { position: relative; border-radius: 10px; overflow: hidden; background: var(--surface); box-shadow: 0 0 0 1px rgba(0,0,0,.12), 0 24px 60px rgba(20,24,34,.22); }
+.lights { display: flex; gap: 8px; margin-right: 16px; }
+.lights i { width: 12px; height: 12px; border-radius: 50%; background: #FF5F57; }
+.lights i:nth-child(2) { background: #FEBC2E; }
+.lights i:nth-child(3) { background: #28C840; }
+.kbd { display: inline-flex; gap: 2px; }
+.kbd b { font-weight: 500; font-size: 11px; line-height: 18px; min-width: 18px; padding: 0 4px; text-align: center; border-radius: 4px; background: var(--paper); color: var(--ink2); box-shadow: inset 0 0 0 1px var(--rule); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--none); flex: none; }
+.dot.ok { background: var(--ok); } .dot.ng { background: var(--ng); } .dot.hold { background: var(--hold); }
+
+/* ---- workspace ---- */
+.ws { width: 1280px; height: 1240px; display: grid; grid-template-rows: 44px 1fr; grid-template-columns: 296px 1fr; }
+.titlebar { grid-column: 1 / -1; display: flex; align-items: center; padding: 0 14px; background: var(--paper); border-bottom: 1px solid var(--rule); }
+.session { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+.search { margin: 0 auto; width: 380px; height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 10px; background: var(--surface); border-radius: 6px; box-shadow: inset 0 0 0 1px var(--rule); color: var(--ink3); font-size: 13px; }
+.search span { flex: 1; }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 6px; font: inherit; font-size: 13px; font-weight: 500; color: var(--ink); background: var(--surface); box-shadow: inset 0 0 0 1px var(--rule); }
+.icon-btn { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 6px; color: var(--ink2); margin-left: 6px; }
+
+.sidebar { background: var(--paper); border-right: 1px solid var(--rule); padding: 10px 8px; display: flex; flex-direction: column; min-height: 0; }
+.nav { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-radius: 6px; font-size: 13px; color: var(--ink2); }
+.folder { margin-top: 14px; }
+.folder-head { display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 6px; font-size: 12px; font-weight: 600; color: var(--ink2); }
+.folder-head .count { margin-left: auto; font-weight: 400; color: var(--ink3); }
+.tc { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px 0 12px; border-radius: 6px; font-size: 13px; }
+.tc .id { width: 46px; color: var(--ink3); font-size: 12px; }
+.tc .t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tc .n { color: var(--ink3); font-size: 12px; }
+.tc.sel { background: var(--surface); box-shadow: 0 0 0 1px var(--rule), 0 1px 2px rgba(20,24,34,.06); font-weight: 500; }
+.side-foot { margin-top: auto; padding: 12px 10px 4px; border-top: 1px solid var(--rule); }
+.add { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink2); height: 30px; margin-bottom: 12px; }
+.add span { flex: 1; }
+.bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--none); }
+.bar i { display: block; }
+.legend { display: flex; gap: 12px; margin-top: 8px; font-size: 12px; color: var(--ink2); }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+
+.main { position: relative; overflow: hidden; }
+.main::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 96px; background: linear-gradient(rgba(255,255,255,0), #fff 70%); pointer-events: none; }
+.page { max-width: 780px; margin: 0 auto; padding: 32px 40px 120px; height: 100%; overflow: hidden; }
+.crumb { font-size: 12px; color: var(--ink3); }
+h1 { font-size: 26px; line-height: 1.35; font-weight: 600; letter-spacing: .01em; margin: 4px 0 14px; }
+.meta-row { display: flex; align-items: center; justify-content: space-between; }
+.cat { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px; font-size: 12px; font-weight: 500; color: #B42318; box-shadow: inset 0 0 0 1px currentColor; }
+.seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 8px; background: var(--paper); }
+.seg span { height: 28px; line-height: 28px; padding: 0 14px; border-radius: 6px; font-size: 13px; color: var(--ink2); }
+.seg .on-ng { background: var(--ng); color: #fff; font-weight: 600; }
+.props { display: grid; grid-template-columns: 84px 1fr; gap: 8px 16px; margin: 22px 0 28px; padding: 18px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.props dt { font-size: 13px; color: var(--ink3); }
+.props dd { font-size: 14px; }
+.props ol { padding-left: 1.3em; }
+.sec-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 16px; }
+.sec-head h2 { font-size: 16px; font-weight: 600; }
+.sec-head span { font-size: 13px; color: var(--ink3); }
+
+.entry { position: relative; display: grid; grid-template-columns: 30px 1fr; gap: 16px; padding-bottom: 28px; }
+.entry::before { content: ""; position: absolute; left: 15px; top: 32px; bottom: 4px; width: 1px; background: var(--rule); }
+.marker { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 600; background: var(--surface); box-shadow: inset 0 0 0 1px var(--rule); }
+.e-head { display: flex; align-items: center; gap: 12px; height: 30px; }
+.e-head .c { font-size: 15px; font-weight: 500; }
+.e-head .time { margin-left: auto; font-size: 12px; color: var(--ink3); }
+.e-head .more { color: var(--ink3); }
+.blocks { display: grid; gap: 12px; margin-top: 8px; }
+.shot { border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 1px var(--rule); }
+.shot-cap { display: flex; gap: 16px; padding: 7px 12px; font-size: 12px; color: var(--ink3); background: var(--paper); border-top: 1px solid var(--rule); }
+.shot-cap span { display: inline-flex; align-items: center; gap: 5px; }
+.blabel { display: flex; gap: 8px; align-items: baseline; font-size: 12px; font-weight: 600; color: var(--ink2); margin-bottom: 6px; }
+.blabel em { font-style: normal; font-weight: 400; color: var(--ink3); }
+pre { font-family: var(--mono); font-size: 12.5px; line-height: 1.65; padding: 12px 14px; border-radius: 6px; background: #F6F7F9; box-shadow: inset 0 0 0 1px var(--rule); }
+pre .k { color: var(--ai); font-weight: 500; }
+pre .s { color: #8A5A00; }
+table { border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 5px 14px 5px 10px; border: 1px solid var(--rule); }
+th { font-size: 12px; font-weight: 500; color: var(--ink2); background: var(--paper); }
+.expect { display: grid; grid-template-columns: 1fr 1fr; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--rule); overflow: hidden; }
+.expect div { padding: 10px 14px; }
+.expect div + div { border-left: 1px solid var(--rule); background: #FDF3F2; }
+.expect small { display: block; font-size: 12px; color: var(--ink3); }
+.expect .v { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 600; color: #fff; background: var(--ng); line-height: 18px; }
+.link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ai); }
+.composer { display: grid; grid-template-columns: 30px 1fr; gap: 16px; }
+.composer .marker { box-shadow: inset 0 0 0 1px var(--rule); color: var(--ink3); border: 1px dashed var(--ink3); box-shadow: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; height: 30px; }
+.chip { height: 26px; line-height: 26px; padding: 0 10px; border-radius: 6px; font-size: 13px; color: var(--ink2); box-shadow: inset 0 0 0 1px var(--rule); }
+.hint { font-size: 12px; color: var(--ink3); margin-top: 6px; }
+
+.shutter { z-index: 1; position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 7px 16px 7px 7px; border-radius: 999px; background: var(--ai); color: #fff; box-shadow: 0 10px 28px rgba(44,75,184,.35), 0 2px 6px rgba(20,24,34,.15); }
+.shutter .ring { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #fff; display: grid; place-items: center; }
+.shutter .ring i { width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+.shutter .label { font-size: 14px; font-weight: 600; }
+.shutter .kbd b { background: rgba(255,255,255,.18); color: #fff; box-shadow: none; }
+
+/* ---- fake captured browser ---- */
+.fake { position: relative; background: #F7F8FA; }
+.fake-top { height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 10px; background: #E9EBEF; }
+.fake-top i { width: 8px; height: 8px; border-radius: 50%; background: #C9CDD4; }
+.fake-url { margin-left: 10px; height: 18px; line-height: 18px; padding: 0 10px; border-radius: 9px; background: #fff; font-size: 11px; color: #6B7280; width: 50%; }
+.fake-body { height: 270px; display: grid; place-items: center; }
+.card { position: relative; width: 300px; padding: 20px 22px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); font-size: 11px; color: #374151; }
+.card h3 { font-size: 15px; margin-bottom: 10px; }
+.field { height: 26px; border: 1px solid #D1D5DB; border-radius: 4px; margin: 3px 0 8px; padding: 0 8px; line-height: 24px; }
+.mask { display: inline-block; width: 130px; height: 12px; background: #111; vertical-align: middle; }
+.err { position: relative; display: inline-block; color: #DC2626; font-size: 10.5px; margin: 2px 0 10px; }
+.go { height: 28px; border-radius: 4px; background: #1F2937; color: #fff; text-align: center; line-height: 28px; }
+.a-box { position: absolute; inset: -5px -7px; border: 3px solid var(--anno); border-radius: 3px; }
+.a-callout { position: absolute; left: calc(100% + 18px); top: 50%; transform: translateY(-50%); padding: 6px 10px; background: #fff; border: 2px solid var(--anno); border-radius: 6px; color: var(--anno); font-size: 11px; font-weight: 600; white-space: nowrap; }
+.a-callout::after { content: ""; position: absolute; left: -9px; top: 50%; margin-top: -6px; border: 6px solid transparent; border-right: 8px solid var(--anno); border-left: 0; }
+
+/* ---- compact ---- */
+.cp { width: 360px; height: 560px; display: flex; flex-direction: column; background: var(--surface); }
+.cp .titlebar { height: 40px; flex: none; }
+.cp .pin { margin-left: auto; color: var(--ai); display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; }
+.cp-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
+.cp h2 { font-size: 18px; line-height: 1.45; font-weight: 600; margin-top: 2px; }
+.cp .seg { display: flex; }
+.cp .seg span { flex: 1; text-align: center; padding: 0; }
+.big-shutter { display: flex; align-items: center; gap: 12px; height: 60px; padding: 0 12px; border-radius: 14px; background: var(--ai); color: #fff; }
+.big-shutter .ring { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #fff; display: grid; place-items: center; }
+.big-shutter .ring i { width: 22px; height: 22px; border-radius: 50%; background: #fff; }
+.big-shutter .label { flex: 1; font-size: 15px; font-weight: 600; }
+.big-shutter .kbd b { background: rgba(255,255,255,.18); color: #fff; box-shadow: none; }
+.thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.thumbs div { aspect-ratio: 4 / 3; border-radius: 4px; background: #EEF0F3; box-shadow: inset 0 0 0 1px var(--rule); position: relative; }
+.thumbs div::after { content: ""; position: absolute; left: 30%; top: 30%; width: 40%; height: 40%; background: #fff; border-radius: 2px; }
+.thumbs div:nth-child(2)::after { left: 12%; top: 18%; width: 76%; height: 22%; background: #F6F7F9; box-shadow: 0 16px 0 #F6F7F9; }
+.thumbs div:nth-child(3)::after { left: 12%; top: 25%; width: 76%; height: 50%; background: #FDF3F2; }
+.cp-foot { display: flex; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink2); }
+.cp-foot span { display: inline-flex; align-items: center; gap: 4px; }
+
+/* ---- editor ---- */
+.ed { width: 1280px; height: 760px; display: grid; grid-template-rows: 52px 1fr auto; background: #1E2127; color: #E7E9EE; }
+.ed-top { display: flex; align-items: center; gap: 16px; padding: 0 14px; background: #262A32; border-bottom: 1px solid #343944; }
+.dest { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.dest small { color: #8B93A4; font-size: 12px; }
+.dest .dd { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 6px; background: #30353F; }
+.tools { margin: 0 auto; display: flex; align-items: center; gap: 2px; padding: 3px; border-radius: 8px; background: #30353F; }
+.tool { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 6px; font-size: 13px; color: #B8BFCC; }
+.tool b { font-weight: 500; font-size: 11px; color: #7C8494; }
+.tool.on { background: #474E5C; color: #fff; }
+.sep { width: 1px; height: 18px; background: #454B57; margin: 0 6px; }
+.sw { width: 16px; height: 16px; border-radius: 50%; margin: 0 4px; }
+.sw.on { box-shadow: 0 0 0 2px #30353F, 0 0 0 4px #fff; }
+.ed-actions { display: flex; gap: 8px; }
+.ed-btn { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 6px; font-size: 13px; font-weight: 500; color: #D4D8E0; }
+.ed-btn.primary { background: var(--ai); color: #fff; }
+.ed-btn .kbd b { background: rgba(255,255,255,.12); color: inherit; box-shadow: none; }
+.canvas { display: grid; place-items: center; position: relative; }
+.canvas .shot { width: 880px; box-shadow: 0 0 0 1px #3A3F4B, 0 20px 50px rgba(0,0,0,.4); }
+.canvas .fake-body { height: 420px; }
+.canvas .card { transform: scale(1.25); }
+.tip { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #8B93A4; }
+.handle { position: absolute; width: 8px; height: 8px; margin: -6px; background: #fff; border: 1px solid var(--anno); }
+.ed-bottom { padding: 14px 24px 16px; background: #262A32; border-top: 1px solid #343944; }
+.comment { height: 44px; display: flex; align-items: center; padding: 0 14px; border-radius: 8px; background: #1B1E24; box-shadow: inset 0 0 0 1px #3A3F4B; font-size: 14px; }
+.comment::after { content: ""; width: 1px; height: 18px; background: #fff; margin-left: 1px; }
+.src { display: flex; gap: 16px; margin-top: 8px; font-size: 12px; color: #8B93A4; }
+.src span { display: inline-flex; align-items: center; gap: 5px; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+<!-- ================= ワークスペース ================= -->
+<div>
+<p class="caption">ワークスペース（通常の表示）</p>
+<div class="win ws">
+  <div class="titlebar">
+    <div class="lights"><i></i><i></i><i></i></div>
+    <div class="session">会員登録機能 結合試験
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+    <div class="search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <span>テストケースや操作を検索</span>
+      <span class="kbd"><b>⌘</b><b>K</b></span>
+    </div>
+    <span class="btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>
+      書き出す
+    </span>
+    <span class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="nav">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>
+      概要と実施情報
+    </div>
+
+    <div class="folder">
+      <div class="folder-head"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>ログイン<span class="count num">3 / 4</span></div>
+      <div class="tc"><span class="dot ok"></span><span class="id num">TC-001</span><span class="t">正しい認証情報でログインできる</span><span class="n num">2</span></div>
+      <div class="tc"><span class="dot ok"></span><span class="id num">TC-002</span><span class="t">ログイン状態を保持できる</span><span class="n num">1</span></div>
+      <div class="tc sel"><span class="dot ng"></span><span class="id num">TC-003</span><span class="t">誤ったパスワードでログインできない</span><span class="n num">3</span></div>
+      <div class="tc"><span class="dot"></span><span class="id num">TC-004</span><span class="t">5回失敗でアカウントがロックされる</span><span class="n num"></span></div>
+    </div>
+    <div class="folder">
+      <div class="folder-head"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>会員登録<span class="count num">2 / 3</span></div>
+      <div class="tc"><span class="dot ok"></span><span class="id num">TC-005</span><span class="t">必須項目のみで登録できる</span><span class="n num">2</span></div>
+      <div class="tc"><span class="dot hold"></span><span class="id num">TC-006</span><span class="t">登録済みのメールアドレスは拒否される</span><span class="n num">1</span></div>
+      <div class="tc"><span class="dot"></span><span class="id num">TC-007</span><span class="t">パスワードは8文字以上でないと登録できない</span><span class="n num"></span></div>
+    </div>
+    <div class="folder">
+      <div class="folder-head"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m9 6 6 6-6 6"/></svg>パスワード再設定<span class="count num">0 / 2</span></div>
+    </div>
+
+    <div class="side-foot">
+      <div class="add">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        <span>テストケースを追加</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3m0 12-4-4m4 4 4-4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+      </div>
+      <div class="bar"><i style="width:33.3%;background:var(--ok)"></i><i style="width:11.1%;background:var(--ng)"></i><i style="width:11.1%;background:var(--hold)"></i></div>
+      <div class="legend num">
+        <span><span class="dot ok"></span>OK 3</span>
+        <span><span class="dot ng"></span>NG 1</span>
+        <span><span class="dot hold"></span>保留 1</span>
+        <span><span class="dot"></span>未実施 4</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <div class="crumb num">ログイン ／ TC-003</div>
+      <h1>誤ったパスワードでログインできない</h1>
+      <div class="meta-row">
+        <span class="cat">異常系</span>
+        <div class="seg"><span>未実施</span><span>OK</span><span class="on-ng">NG</span><span>保留</span></div>
+      </div>
+
+      <dl class="props">
+        <dt>前提条件</dt><dd>テスト用会員（test01@example.jp）が登録済みである</dd>
+        <dt>手順</dt><dd><ol><li>ログイン画面を開く</li><li>登録済みのメールアドレスと誤ったパスワードを入力する</li><li>［ログイン］を押す</li></ol></dd>
+        <dt>期待結果</dt><dd>エラーメッセージが表示され、ログイン失敗回数が1増える</dd>
+      </dl>
+
+      <div class="sec-head"><h2>証跡</h2><span class="num">3件</span></div>
+
+      <div class="entry">
+        <div class="marker num">1</div>
+        <div>
+          <div class="e-head"><span class="c">誤ったパスワードでログインを試行</span><span class="time num">10:02:14</span><span class="more">•••</span></div>
+          <div class="blocks">
+            <figure class="shot">
+              <div class="fake">
+                <div class="fake-top"><i></i><i></i><i></i><div class="fake-url">staging.example.jp/login</div></div>
+                <div class="fake-body">
+                  <div class="card">
+                    <h3>ログイン</h3>
+                    メールアドレス<div class="field"><span class="mask"></span></div>
+                    パスワード<div class="field">••••••••••</div>
+                    <div class="err">メールアドレスまたはパスワードが正しくありません<span class="a-box"></span><span class="a-callout">赤字のエラーが表示された</span></div>
+                    <div class="go">ログイン</div>
+                  </div>
+                </div>
+              </div>
+              <figcaption class="shot-cap">
+                <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>ログイン | サンプル会員サイト - Google Chrome</span>
+                <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>https://staging.example.jp/login</span>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="marker num">2</div>
+        <div>
+          <div class="e-head"><span class="c">ログイン失敗回数を確認</span><span class="time num">10:03:40</span><span class="more">•••</span></div>
+          <div class="blocks">
+            <div>
+              <div class="blabel">実行SQL<em>sql</em></div>
+<pre><span class="k">SELECT</span> email, failed_count <span class="k">FROM</span> members
+<span class="k">WHERE</span> email = <span class="s">'test01@example.jp'</span>;</pre>
+            </div>
+            <div>
+              <div class="blabel">結果</div>
+              <table class="num"><tr><th>email</th><th>failed_count</th></tr><tr><td>test01@example.jp</td><td>0</td></tr></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry">
+        <div class="marker num">3</div>
+        <div>
+          <div class="e-head"><span class="c">判定</span><span class="time num">10:04:05</span><span class="more">•••</span></div>
+          <div class="blocks">
+            <div class="expect">
+              <div><small>期待結果</small>ログイン失敗回数が 1 になる</div>
+              <div><small>実際の結果<span class="v">NG</span></small>0 のまま加算されていない</div>
+            </div>
+            <span class="link"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>#482 ログイン失敗回数が加算されない</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="composer">
+        <div class="marker">+</div>
+        <div>
+          <div class="chips"><span class="chip">画像</span><span class="chip">コード</span><span class="chip">表</span><span class="chip">メモ</span><span class="chip">期待と実際</span><span class="chip">その他…</span></div>
+          <p class="hint">画像は ⌘V で貼り付けたり、ここにドロップしたりしても追加できます</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="shutter">
+      <span class="ring"><i></i></span>
+      <span class="label num">TC-003 に撮影</span>
+      <span class="kbd"><b>⌃</b><b>⌥</b><b>S</b></span>
+    </div>
+  </main>
+</div>
+</div>
+
+<!-- ================= コンパクト表示 ================= -->
+<div>
+<p class="caption">コンパクト表示（ウィンドウを細くすると切り替わる。常に手前に固定できる）</p>
+<div class="win cp">
+  <div class="titlebar">
+    <div class="lights"><i></i><i></i><i></i></div>
+    <span class="pin"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 3H8l1 7-3 3v2h5v6l1 1 1-1v-6h5v-2l-3-3z"/></svg>手前に固定</span>
+  </div>
+  <div class="cp-body">
+    <div>
+      <div class="crumb num">ログイン ／ TC-003</div>
+      <h2>誤ったパスワードでログインできない</h2>
+    </div>
+    <div class="seg"><span>未実施</span><span>OK</span><span class="on-ng">NG</span><span>保留</span></div>
+    <div class="big-shutter">
+      <span class="ring"><i></i></span>
+      <span class="label">撮影</span>
+      <span class="kbd"><b>⌃</b><b>⌥</b><b>S</b></span>
+    </div>
+    <div>
+      <div class="sec-head" style="margin-bottom:8px"><h2 style="font-size:13px">証跡</h2><span class="num">3件</span></div>
+      <div class="thumbs"><div></div><div></div><div></div></div>
+    </div>
+  </div>
+  <div class="cp-foot num">
+    <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>TC-002</span>
+    <span>TC-004<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></span>
+  </div>
+</div>
+</div>
+
+<!-- ================= 編集画面 ================= -->
+<div>
+<p class="caption">撮影後の編集（別ウィンドウ。保存すると閉じて、元のアプリに戻る）</p>
+<div class="win ed">
+  <div class="ed-top">
+    <div class="lights"><i></i><i></i><i></i></div>
+    <div class="dest"><small>保存先</small><span class="dd num">TC-003 誤ったパスワードでログインできない<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg></span></div>
+    <div class="tools">
+      <span class="tool on">枠<b>R</b></span>
+      <span class="tool">吹き出し<b>C</b></span>
+      <span class="tool">文字<b>T</b></span>
+      <span class="tool">黒塗り<b>M</b></span>
+      <span class="tool">切り抜き<b>X</b></span>
+      <span class="sep"></span>
+      <span class="sw on" style="background:var(--anno)"></span>
+      <span class="sw" style="background:#F5B400"></span>
+      <span class="sw" style="background:#3B82F6"></span>
+      <span class="sw" style="background:#22A06B"></span>
+      <span class="sep"></span>
+      <span class="tool"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span>
+    </div>
+    <div class="ed-actions">
+      <span class="ed-btn">破棄<span class="kbd"><b>Esc</b></span></span>
+      <span class="ed-btn primary">保存<span class="kbd"><b>⏎</b></span></span>
+    </div>
+  </div>
+  <div class="canvas">
+    <p class="tip">ドラッグして枠を描く</p>
+    <figure class="shot">
+      <div class="fake">
+        <div class="fake-top"><i></i><i></i><i></i><div class="fake-url">staging.example.jp/login</div></div>
+        <div class="fake-body">
+          <div class="card">
+            <h3>ログイン</h3>
+            メールアドレス<div class="field"><span class="mask"></span></div>
+            パスワード<div class="field">••••••••••</div>
+            <div class="err">メールアドレスまたはパスワードが正しくありません<span class="a-box"><i class="handle" style="left:0;top:0"></i><i class="handle" style="right:0;top:0"></i><i class="handle" style="left:0;bottom:0"></i><i class="handle" style="right:0;bottom:0"></i></span></div>
+            <div class="go">ログイン</div>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </div>
+  <div class="ed-bottom">
+    <div class="comment">誤ったパスワードでログインを試行</div>
+    <div class="src">
+      <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>ログイン | サンプル会員サイト - Google Chrome</span>
+      <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>https://staging.example.jp/login</span>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</body>
+</html>
