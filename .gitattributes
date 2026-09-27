@@ -1,0 +1,5 @@
+# Windows の CI でも改行を LF に揃える(prettier / eslint が CRLF を誤検出しないように)
+* text=auto eol=lf
+*.png binary
+*.ico binary
+*.icns binary
