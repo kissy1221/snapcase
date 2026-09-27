@@ -1584,3 +1584,14 @@ select.res.hold {
 .add-row:hover {
   color: var(--ai);
 }
+
+/* 確認ダイアログ */
+.confirm-msg {
+  margin-bottom: 16px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.actions button.danger {
+  background: var(--ng);
+  color: #fff;
+}

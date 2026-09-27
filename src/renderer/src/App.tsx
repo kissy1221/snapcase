@@ -1,5 +1,6 @@
 import Home from './Home'
 import { useManifest } from './store'
+import { ConfirmHost } from './ui'
 import Workspace from './Workspace'
 
 function App(): React.JSX.Element {
@@ -8,6 +9,7 @@ function App(): React.JSX.Element {
     <>
       <div className="drag-top" />
       {manifest ? <Workspace m={manifest} /> : <Home />}
+      <ConfirmHost />
     </>
   )
 }
