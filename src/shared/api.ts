@@ -1,6 +1,8 @@
 import type { Op } from './ops'
 import type { Manifest, Result } from './types'
 
+export type ExportFormat = 'html' | 'md' | 'pdf' | 'xlsx'
+
 export interface SessionSummary {
   name: string
   /** manifest.json の更新時刻(ms) */
@@ -25,6 +27,10 @@ export interface Api {
   /** ウィンドウ選択の一覧 / 選んだウィンドウの撮影 */
   listWindows(): Promise<WindowChoice[]>
   captureSource(id: string): Promise<void>
+  /** 指定の形式で書き出す。作ったファイル名(セッションフォルダ内)を返す。 */
+  exportSession(formats: ExportFormat[]): Promise<{ files: string[] } | { error: string }>
+  /** セッションのフォルダを OS のファイラで開く。 */
+  revealSession(): Promise<void>
   /** 画像ファイルを選んで追加する(選ばなければ何もしない)。 */
   pickImages(): Promise<void>
   /** 貼り付け・ドロップされた画像を追加する。 */

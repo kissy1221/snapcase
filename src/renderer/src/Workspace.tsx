@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { Manifest } from '../../shared/types'
 import { Shutter } from './Capture'
+import ExportDialog from './Export'
 import { addImageFiles, dropFiles, targetOf } from './helpers'
 import Overview from './Overview'
 import Sidebar from './Sidebar'
@@ -11,6 +12,7 @@ import './assets/workspace.css'
 
 export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
   const sel = useSelection()
+  const [exporting, setExporting] = useState(false)
   const tc = m.testcases.find((t) => t.id === sel)
   // 選択中のテストケースが消えた(削除・取り消し)ときは概要に戻す。
   useEffect(() => {
@@ -36,6 +38,10 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
         <button className="session" onClick={() => window.api.closeSession()} title="ホームへ戻る">
           <span aria-hidden>‹</span> {m.session}
         </button>
+        <span className="spacer" />
+        <button className="export" onClick={() => setExporting(true)}>
+          書き出す
+        </button>
       </header>
       <Sidebar m={m} />
       <main
@@ -51,6 +57,7 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
         <Shutter m={m} target={targetOf(m)} />
         <Toaster />
       </main>
+      {exporting && <ExportDialog onClose={() => setExporting(false)} />}
     </div>
   )
 }

@@ -20,6 +20,9 @@ export function defaultMeta(): Meta {
 export const sanitizeName = (name: string): string => name.replace(/[\\/:*?"<>|]/g, '_').trim()
 
 export class Session {
+  /** 保存のたびに呼ばれる(ログの再生成などに使う)。 */
+  onSaved?: () => void
+
   private constructor(
     readonly dir: string,
     public manifest: Manifest
@@ -65,6 +68,7 @@ export class Session {
     const tmp = this.manifestPath + '.tmp'
     await writeFile(tmp, JSON.stringify(this.manifest, null, 2), 'utf-8')
     await rename(tmp, this.manifestPath)
+    this.onSaved?.()
   }
 }
 

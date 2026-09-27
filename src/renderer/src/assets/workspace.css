@@ -841,3 +841,27 @@ input.line {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+.spacer {
+  flex: 1;
+}
+.export {
+  -webkit-app-region: no-drag;
+  height: 28px;
+  margin-right: 12px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.export:hover {
+  box-shadow: inset 0 0 0 1px var(--ai);
+}
+.note-s {
+  font-size: 12px;
+  color: var(--ink3);
+}

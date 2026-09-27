@@ -6,7 +6,8 @@ import {
   ipcMain,
   net,
   Notification,
-  protocol
+  protocol,
+  shell
 } from 'electron'
 import { readFile } from 'fs/promises'
 import { basename, join } from 'path'
@@ -14,6 +15,8 @@ import { pathToFileURL } from 'url'
 import type { Op } from '../shared/ops'
 import { captureForeground, CaptureError, captureSource, listWindows } from './capture'
 import { editorCurrent, editorDiscard, editorSave, enqueue } from './editor'
+import type { ExportFormat } from '../shared/api'
+import { exportSession, scheduleLiveOutputs } from './export'
 import { loadTestCases } from './import'
 import { listSessions, Session } from './session'
 import { broadcast, sendToast, state, targetTestCase } from './state'
@@ -67,6 +70,8 @@ export function registerIpc(): void {
   ipcMain.handle('sessions:list', () => listSessions(root()))
   ipcMain.handle('session:open', async (_e, name: string) => {
     state.session = await Session.open(root(), name)
+    const opened = state.session
+    opened.onSaved = () => scheduleLiveOutputs(opened)
     state.selectedTc = null
     broadcast()
     return state.session.manifest
@@ -130,6 +135,16 @@ export function registerIpc(): void {
       )
     }
   )
+
+  ipcMain.handle('session:export', async (_e, formats: ExportFormat[]) => {
+    if (!state.session) return { error: '先にセッションを開いてください。' }
+    try {
+      return { files: await exportSession(state.session, formats) }
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : '書き出せませんでした。' }
+    }
+  })
+  ipcMain.handle('session:reveal', () => state.session && shell.openPath(state.session.dir))
 
   ipcMain.handle('testcases:import', async (_e, path?: string) => {
     if (!state.session) return { error: '先にセッションを開いてください。' }
