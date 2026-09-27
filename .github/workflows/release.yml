@@ -1,0 +1,81 @@
+name: Release
+
+# v0.1.0 のようなタグを push すると、3 OS でビルドして GitHub Release に載せる。
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: タグと package.json の version が一致しているか
+        run: |
+          v="$(node -p "require('./package.json').version")"
+          if [ "v$v" != "$GITHUB_REF_NAME" ]; then
+            echo "タグ $GITHUB_REF_NAME と package.json の version ($v) が一致しません。" >&2
+            exit 1
+          fi
+
+  build:
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            name: mac
+            # identity=- は ad-hoc 署名。証明書が無くても、Apple Silicon で「壊れている」と扱われないようにする。
+            args: --mac --arm64 --x64 -c.mac.identity=-
+          - os: windows-latest
+            name: windows
+            args: --win --x64
+          - os: ubuntu-latest
+            name: linux
+            args: --linux --x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npx electron-vite build
+      # 署名しない(下の環境変数で、証明書が無くても探しに行かせない)。署名する場合は docs/release.md を参照。
+      - run: npx electron-builder ${{ matrix.args }} --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.name }}
+          if-no-files-found: error
+          path: |
+            dist/*.dmg
+            dist/*.exe
+            dist/*.AppImage
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: release
+      - name: チェックサム
+        run: cd release && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: GitHub Release を作る
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          flags=""
+          case "$GITHUB_REF_NAME" in *-*) flags="--prerelease" ;; esac  # v1.0.0-beta.1 など
+          gh release create "$GITHUB_REF_NAME" release/* \
+            --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes $flags
