@@ -45,6 +45,19 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
       }
     }
     const key = (e: KeyboardEvent): void => {
+      // 元に戻す / やり直す。入力中(その欄の取り消し)とダイアログ表示中は邪魔しない。
+      const typing = (e.target as HTMLElement).matches('input, textarea, select')
+      const k = e.key.toLowerCase()
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        (k === 'z' || k === 'y') &&
+        !typing &&
+        !document.querySelector('dialog[open]')
+      ) {
+        e.preventDefault()
+        void (k === 'y' || e.shiftKey ? window.api.redo() : window.api.undo())
+        return
+      }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         // 別のダイアログを開いているときは、パレットで上書きしない(パレット自身は閉じられる)。
         if (document.querySelector('dialog[open]:not(:has(.palette-input))')) return
@@ -66,7 +79,13 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
       { id: 'add', label: 'テストケースを追加', run: () => addTestCase(m) },
       { id: 'shoot', label: '撮影するウィンドウを選ぶ', run: () => setOverlay('picker') },
       { id: 'img', label: '画像ファイルを追加', run: () => window.api.pickImages() },
-      { id: 'undo', label: '直前の証跡を取り消す', run: () => window.api.apply({ t: 'undoLast' }) },
+      { id: 'undo', label: '元に戻す', run: () => void window.api.undo() },
+      { id: 'redo', label: 'やり直す', run: () => void window.api.redo() },
+      {
+        id: 'undolast',
+        label: '直前に撮った証跡を取り消す',
+        run: () => window.api.apply({ t: 'undoLast' })
+      },
       {
         id: 'import',
         label: 'CSV / Excel からテストケースを取り込む',

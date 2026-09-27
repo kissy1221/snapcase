@@ -3,21 +3,27 @@ import { CATEGORIES, RESULTS } from '../../shared/constants'
 import { displayNumbers } from '../../shared/ops'
 import type { Block, Manifest, TestCase } from '../../shared/types'
 import { BLOCK_LABEL, TEXT_BLOCKS, type TextBlockType } from './blockMeta'
-import { BlockDialog, BlockView } from './Blocks'
-import { RESULT_CLASS } from './helpers'
+import { BlockDialog, BlockView, ImageViewer } from './Blocks'
+import { RESULT_CLASS, undoToast } from './helpers'
+import { Menu, type MenuItem } from './Menu'
 import { OVERVIEW, select } from './store'
 import { AutoLine, AutoText } from './ui'
 
+type ImageBlock = Extract<Block, { type: 'image' }>
 type Editing = { type: TextBlockType; no?: number; index?: number; initial?: Block }
 
 export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): React.JSX.Element {
   const [editing, setEditing] = useState<Editing | null>(null)
+  const [viewing, setViewing] = useState<ImageBlock | null>(null)
   const [over, setOver] = useState<string | null>(null) // ドロップ位置の強調(直前に線を出す)
+  const [dragging, setDragging] = useState<string | null>(null) // ドラッグ中の要素(薄く表示する)
   const numbers = displayNumbers(m)
   const apply = window.api.apply
   const patch = (p: Partial<TestCase>): Promise<void> =>
     apply({ t: 'updateTestCase', id: tc.id, patch: p })
   const groups = [...new Set(m.testcases.map((t) => t.group).filter(Boolean))]
+  const others = m.testcases.filter((t) => t.id !== tc.id)
+  const lastEntry = tc.entries.length - 1
 
   const submit = (b: Block): void => {
     if (!editing) return
@@ -26,6 +32,13 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
       apply({ t: 'addBlock', tcId: tc.id, no: editing.no, block: b })
     else apply({ t: 'updateBlock', tcId: tc.id, no: editing.no, index: editing.index, block: b })
     setEditing(null)
+  }
+
+  /** 削除はすぐ実行し、「元に戻す」を出す(確認ダイアログは出さない)。 */
+  const removeTc = (): void => {
+    select(OVERVIEW)
+    apply({ t: 'deleteTestCase', id: tc.id })
+    undoToast(`${tc.id} を削除しました`)
   }
 
   /** ドラッグ中の種類が合うときだけ、ドロップを受けて位置を強調する。 */
@@ -51,12 +64,74 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
     apply({ t: 'moveBlockTo', no, index, toNo, toIndex })
   }
 
-  const remove = (): void => {
-    const n = tc.entries.length
-    if (n && !confirm(`${tc.id} と、証跡 ${n} 件を削除します。元に戻せません。`)) return
-    select(OVERVIEW)
-    apply({ t: 'deleteTestCase', id: tc.id })
-  }
+  const entryMenu = (no: number, i: number): MenuItem[] => [
+    {
+      label: '上へ移動',
+      disabled: i === 0,
+      run: () => apply({ t: 'moveEntry', tcId: tc.id, no, delta: -1 })
+    },
+    {
+      label: '下へ移動',
+      disabled: i === lastEntry,
+      run: () => apply({ t: 'moveEntry', tcId: tc.id, no, delta: 1 })
+    },
+    ...(others.length
+      ? [
+          { label: '別のテストケースへ移動', heading: true },
+          ...others.map((o) => ({
+            label: `${o.id}  ${o.title}`,
+            run: () => {
+              apply({ t: 'moveEntryTo', no, toTcId: o.id, beforeNo: null })
+              undoToast(`${o.id} へ移動しました`)
+            }
+          }))
+        ]
+      : []),
+    { label: '', heading: true },
+    {
+      label: 'この証跡を削除',
+      danger: true,
+      run: () => {
+        apply({ t: 'deleteEntry', tcId: tc.id, no })
+        undoToast('証跡を削除しました')
+      }
+    }
+  ]
+
+  const blockMenu = (no: number, i: number, j: number, b: Block, count: number): MenuItem[] => [
+    b.type === 'image'
+      ? { label: '拡大して見る', run: () => setViewing(b) }
+      : {
+          label: '編集',
+          run: () => setEditing({ type: b.type as TextBlockType, no, index: j, initial: b })
+        },
+    {
+      label: '上へ移動',
+      disabled: i === 0 && j === 0,
+      run: () => apply({ t: 'moveBlockBy', no, index: j, delta: -1 })
+    },
+    {
+      label: '下へ移動',
+      disabled: i === lastEntry && j === count - 1,
+      run: () => apply({ t: 'moveBlockBy', no, index: j, delta: 1 })
+    },
+    { label: '', heading: true },
+    {
+      label: 'このブロックを削除',
+      danger: true,
+      run: () => {
+        apply({ t: 'deleteBlock', tcId: tc.id, no, index: j })
+        undoToast('ブロックを削除しました')
+      }
+    }
+  ]
+
+  const addItems = (no?: number): MenuItem[] => [
+    ...(no === undefined
+      ? [{ label: '画像ファイルを選ぶ…', run: () => void window.api.pickImages() }]
+      : []),
+    ...TEXT_BLOCKS.map((t) => ({ label: BLOCK_LABEL[t], run: () => setEditing({ type: t, no }) }))
+  ]
 
   return (
     <div className="page">
@@ -140,17 +215,21 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
         <span className="num">{tc.entries.length}件</span>
       </div>
       {tc.entries.length === 0 && (
-        <p className="empty">まだ証跡がありません。下のボタンで追加できます。</p>
+        <p className="empty">まだ証跡がありません。撮影するか、下の「証跡を追加」から作れます。</p>
       )}
 
       {tc.entries.map((e, i) => (
         <section
-          className={'entry' + (over === 'e' + e.no ? ' drop-before' : '')}
+          className={
+            'entry' +
+            (over === 'e' + e.no ? ' drop-before' : '') +
+            (dragging === 'e' + e.no ? ' dragging' : '')
+          }
           key={e.no}
           onDragOver={(ev) => hover(ev, 'e' + e.no, ['text/entry', 'text/block'])}
           onDragLeave={() => setOver(null)}
           onDrop={(ev) => {
-            // ブロックは、この記録の末尾へ。記録は、この記録の直前へ。
+            // ブロックは、この証跡の末尾へ。証跡は、この証跡の直前へ。
             const blk = ev.dataTransfer.getData('text/block')
             if (blk) return dropBlock(ev, blk, e.no, Infinity)
             dropEntry(ev, e.no)
@@ -159,11 +238,13 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
           <div
             className="marker num handle"
             draggable
-            title="ドラッグして並べ替え（別のテストケースへは、左の一覧にドロップ）"
+            title="ドラッグして並べ替え"
             onDragStart={(ev) => {
               ev.dataTransfer.setData('text/entry', String(e.no))
               ev.dataTransfer.setDragImage(ev.currentTarget.closest('.entry')!, 0, 0)
+              setDragging('e' + e.no)
             }}
+            onDragEnd={() => setDragging(null)}
           >
             {numbers.get(e.no)}
           </div>
@@ -177,33 +258,16 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
                 onCommit={(v) => apply({ t: 'setEntryComment', tcId: tc.id, no: e.no, comment: v })}
               />
               <span className="time num">{e.time.slice(11)}</span>
-              <span className="tools">
-                <button
-                  aria-label="上へ"
-                  disabled={i === 0}
-                  onClick={() => apply({ t: 'moveEntry', tcId: tc.id, no: e.no, delta: -1 })}
-                >
-                  ↑
-                </button>
-                <button
-                  aria-label="下へ"
-                  disabled={i === tc.entries.length - 1}
-                  onClick={() => apply({ t: 'moveEntry', tcId: tc.id, no: e.no, delta: 1 })}
-                >
-                  ↓
-                </button>
-                <button
-                  aria-label="この証跡を削除"
-                  onClick={() => apply({ t: 'deleteEntry', tcId: tc.id, no: e.no })}
-                >
-                  削除
-                </button>
-              </span>
+              <Menu label="この証跡の操作" trigger="⋯" items={entryMenu(e.no, i)} className="end" />
             </div>
             <div className="blocks">
               {e.blocks.map((b, j) => (
                 <div
-                  className={'block' + (over === `b${e.no}:${j}` ? ' drop-before' : '')}
+                  className={
+                    'block' +
+                    (over === `b${e.no}:${j}` ? ' drop-before' : '') +
+                    (dragging === `b${e.no}:${j}` ? ' dragging' : '')
+                  }
                   key={j}
                   onDragOver={(ev) => hover(ev, `b${e.no}:${j}`, ['text/block'])}
                   onDragLeave={() => setOver(null)}
@@ -212,73 +276,64 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
                     if (blk) dropBlock(ev, blk, e.no, j)
                   }}
                 >
-                  <BlockView b={b} />
-                  <span className="tools">
-                    <button
-                      className="handle"
-                      aria-label="ドラッグしてブロックを移動"
-                      title="ドラッグして移動（別の記録へも）"
-                      draggable
-                      onDragStart={(ev) => {
-                        ev.dataTransfer.setData('text/block', `${e.no}:${j}`)
-                        ev.dataTransfer.setDragImage(ev.currentTarget.closest('.block')!, 0, 0)
-                      }}
-                    >
-                      ⋮⋮
-                    </button>
-                    <button
-                      aria-label="ブロックを上へ"
-                      disabled={j === 0}
-                      onClick={() => apply({ t: 'moveBlockBy', no: e.no, index: j, delta: -1 })}
-                    >
-                      ↑
-                    </button>
-                    <button
-                      aria-label="ブロックを下へ"
-                      disabled={j === e.blocks.length - 1}
-                      onClick={() => apply({ t: 'moveBlockBy', no: e.no, index: j, delta: 1 })}
-                    >
-                      ↓
-                    </button>
-                    {b.type !== 'image' && (
-                      <button
-                        aria-label="ブロックを編集"
-                        onClick={() =>
-                          setEditing({
-                            type: b.type as TextBlockType,
-                            no: e.no,
-                            index: j,
-                            initial: b
-                          })
-                        }
-                      >
-                        編集
-                      </button>
-                    )}
-                    <button
-                      aria-label="ブロックを削除"
-                      onClick={() => apply({ t: 'deleteBlock', tcId: tc.id, no: e.no, index: j })}
-                    >
-                      ×
-                    </button>
+                  <span
+                    className="grip handle"
+                    draggable
+                    title="ドラッグして移動（別の証跡へも）"
+                    onDragStart={(ev) => {
+                      ev.dataTransfer.setData('text/block', `${e.no}:${j}`)
+                      ev.dataTransfer.setDragImage(ev.currentTarget.closest('.block')!, 0, 0)
+                      setDragging(`b${e.no}:${j}`)
+                    }}
+                    onDragEnd={() => setDragging(null)}
+                  >
+                    ⋮⋮
                   </span>
+                  <div
+                    className="block-body"
+                    role="button"
+                    tabIndex={0}
+                    title={b.type === 'image' ? 'クリックで拡大' : 'クリックで編集'}
+                    onClick={(ev) => {
+                      if ((ev.target as HTMLElement).closest('a')) return
+                      if (b.type === 'image') setViewing(b)
+                      else
+                        setEditing({
+                          type: b.type as TextBlockType,
+                          no: e.no,
+                          index: j,
+                          initial: b
+                        })
+                    }}
+                    onKeyDown={(ev) => {
+                      if (ev.key !== 'Enter' || ev.target !== ev.currentTarget) return
+                      if (b.type === 'image') setViewing(b)
+                      else
+                        setEditing({
+                          type: b.type as TextBlockType,
+                          no: e.no,
+                          index: j,
+                          initial: b
+                        })
+                    }}
+                  >
+                    <BlockView b={b} />
+                  </div>
+                  <Menu
+                    label="このブロックの操作"
+                    trigger="⋯"
+                    items={blockMenu(e.no, i, j, b, e.blocks.length)}
+                    className="end"
+                  />
                 </div>
               ))}
             </div>
-            <details className="add-block">
-              <summary>＋ ブロックを追加</summary>
-              <span className="chips">
-                {TEXT_BLOCKS.map((t) => (
-                  <button
-                    key={t}
-                    className="chip"
-                    onClick={() => setEditing({ type: t, no: e.no })}
-                  >
-                    {BLOCK_LABEL[t]}
-                  </button>
-                ))}
-              </span>
-            </details>
+            <Menu
+              label="この証跡にブロックを追加"
+              trigger="＋ この証跡にブロックを追加"
+              items={addItems(e.no)}
+              className="add-inline"
+            />
           </div>
         </section>
       ))}
@@ -291,18 +346,17 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
       >
         <div className="marker">＋</div>
         <div className="chips">
-          <button className="chip" onClick={() => window.api.pickImages()}>
-            画像
-          </button>
-          {TEXT_BLOCKS.map((t) => (
-            <button key={t} className="chip" onClick={() => setEditing({ type: t })}>
-              {BLOCK_LABEL[t]}
-            </button>
-          ))}
+          <Menu
+            label="新しい証跡を追加"
+            trigger="証跡を追加"
+            items={addItems()}
+            className="add-entry"
+          />
+          <span className="hint">撮影はホットキー・画像は貼り付けやドロップでも追加できます</span>
         </div>
       </div>
 
-      <button className="danger" onClick={remove}>
+      <button className="delete-tc" onClick={removeTc}>
         このテストケースを削除
       </button>
 
@@ -315,6 +369,7 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
           onClose={() => setEditing(null)}
         />
       )}
+      {viewing && <ImageViewer b={viewing} onClose={() => setViewing(null)} />}
     </div>
   )
 }

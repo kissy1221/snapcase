@@ -64,3 +64,7 @@ export const useCompact = (): boolean =>
     },
     () => query.matches
   )
+
+/** 元に戻せる操作の後に出すトースト。 */
+export const undoToast = (msg: string): void =>
+  toast({ msg, action: { label: '元に戻す', run: () => void window.api.undo() } })
