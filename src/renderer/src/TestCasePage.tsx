@@ -329,8 +329,8 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
               ))}
             </div>
             <Menu
-              label="この証跡にブロックを追加"
-              trigger="＋ この証跡にブロックを追加"
+              label="ブロックを追加"
+              trigger="＋ ブロックを追加"
               items={addItems(e.no)}
               className="add-inline"
             />
