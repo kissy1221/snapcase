@@ -148,12 +148,6 @@ const now = (): string => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
 }
 
-/** 記録の番号から、それを持つテストケースの id を引く。 */
-const findTc = (m: Manifest, no: number): [string, number] => [
-  m.testcases.find((t) => t.entries.some((e) => e.no === no))?.id ?? '',
-  no
-]
-
 /** 元の manifest は変更せず、新しい manifest を返す。対象が無い操作は何もしない。 */
 export function apply(src: Manifest, op: Op): Applied {
   const m: Manifest = structuredClone(src)
@@ -285,8 +279,24 @@ export function apply(src: Manifest, op: Op): Applied {
       break
     }
     case 'moveBlockBy': {
-      const h = entryOf(...(findTc(m, op.no) as [string, number]))
-      if (h) swap(h.tc.entries[h.i].blocks, op.index, op.index + op.delta)
+      const cur = m.testcases
+        .flatMap((t) => t.entries.map((e) => ({ t, e })))
+        .find((x) => x.e.no === op.no)
+      if (!cur || op.index < 0 || op.index >= cur.e.blocks.length) break
+      const to = op.index + op.delta
+      if (to >= 0 && to < cur.e.blocks.length) {
+        swap(cur.e.blocks, op.index, to)
+        break
+      }
+      // 端では、同じテストケースの隣の証跡へ移る(上端→前の証跡の末尾、下端→次の証跡の先頭)。
+      const es = cur.t.entries
+      const at = es.indexOf(cur.e)
+      const next = es[at + op.delta]
+      if (!next) break
+      const [b] = cur.e.blocks.splice(op.index, 1)
+      if (op.delta < 0) next.blocks.push(b)
+      else next.blocks.unshift(b)
+      if (!cur.e.blocks.length) es.splice(at, 1)
       break
     }
     case 'addBlock': {

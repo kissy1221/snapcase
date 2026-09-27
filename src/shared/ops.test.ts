@@ -213,10 +213,21 @@ describe('記録とブロックの移動', () => {
     expect(texts(m, 'B', 3)).toEqual(['n1', 'y', 'image'])
   })
 
-  it('moveBlockBy: 記録内で上下に入れ替え、端では何もしない', () => {
+  it('moveBlockBy: 記録内で上下に入れ替え、端では隣の記録へ移る。移る先が無ければ何もしない', () => {
     let m = run(two(), { t: 'moveBlockBy', no: 1, index: 1, delta: 1 })
     expect(texts(m, 'A', 1)).toEqual(['image', 'n2', 'n1'])
-    m = run(m, { t: 'moveBlockBy', no: 1, index: 2, delta: 1 })
+    m = run(m, { t: 'moveBlockBy', no: 1, index: 2, delta: 1 }) // 下端 → 次の記録(no2)の先頭
+    expect(texts(m, 'A', 1)).toEqual(['image', 'n2'])
+    expect(texts(m, 'A', 2)).toEqual(['n1', 'x'])
+    m = run(m, { t: 'moveBlockBy', no: 2, index: 0, delta: -1 }) // 上端 → 前の記録(no1)の末尾
     expect(texts(m, 'A', 1)).toEqual(['image', 'n2', 'n1'])
+    m = run(m, { t: 'moveBlockBy', no: 1, index: 0, delta: -1 }) // 先頭の記録の上端 → 何もしない
+    expect(texts(m, 'A', 1)).toEqual(['image', 'n2', 'n1'])
+  })
+
+  it('moveBlockBy: 記録の唯一のブロックを端から動かすと、空になった記録は消える', () => {
+    const m = run(two(), { t: 'moveBlockBy', no: 2, index: 0, delta: -1 })
+    expect(m.testcases[0].entries.map((e) => e.no)).toEqual([1])
+    expect(texts(m, 'A', 1)).toEqual(['image', 'n1', 'n2', 'x'])
   })
 })

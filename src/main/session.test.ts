@@ -23,17 +23,42 @@ describe('Session', () => {
     })
   })
 
-  it('画像を持つ記録を消すと images/ のファイルも消える', async () => {
+  it('画像を持つ記録を消してもファイルは残り(元に戻せる)、後始末で初めて消える', async () => {
     const s = await Session.open(root, 's')
     await s.apply({ t: 'addTestCase', tc: { id: 'A' } })
     await writeFile(join(s.imageDir, '0001.png'), 'x')
+    await writeFile(join(s.imageDir, 'memo.txt'), 'x')
     await s.apply({
       t: 'addEntry',
       tcId: 'A',
       blocks: [{ type: 'image', image: '0001.png', title: '', url: '' }]
     })
     await s.apply({ t: 'deleteEntry', tcId: 'A', no: 1 })
+    expect(existsSync(join(s.imageDir, '0001.png'))).toBe(true)
+    expect(await s.undo()).toBe(true) // 削除を取り消すと、画像も参照される
+    expect(s.manifest.testcases[0].entries).toHaveLength(1)
+    await s.collectGarbage()
+    expect(existsSync(join(s.imageDir, '0001.png'))).toBe(true) // 参照中は消さない
+    await s.apply({ t: 'deleteEntry', tcId: 'A', no: 1 })
+    await s.collectGarbage()
     expect(existsSync(join(s.imageDir, '0001.png'))).toBe(false)
+    expect(existsSync(join(s.imageDir, 'memo.txt'))).toBe(true) // 画像以外は触らない
+  })
+
+  it('undo / redo: 何段でも戻せて、新しい操作をすると redo は捨てられる。保存もされる', async () => {
+    const s = await Session.open(root, 'h')
+    expect(await s.undo()).toBe(false)
+    await s.apply({ t: 'addTestCase', tc: { id: 'A' } })
+    await s.apply({ t: 'addTestCase', tc: { id: 'B' } })
+    await s.undo()
+    expect(s.manifest.testcases.map((t) => t.id)).toEqual(['A'])
+    expect((await Session.open(root, 'h')).manifest.testcases.map((t) => t.id)).toEqual(['A']) // 戻した状態が保存される
+    await s.redo()
+    expect(s.manifest.testcases.map((t) => t.id)).toEqual(['A', 'B'])
+    await s.undo()
+    await s.apply({ t: 'addTestCase', tc: { id: 'C' } })
+    expect(await s.redo()).toBe(false)
+    expect(s.manifest.testcases.map((t) => t.id)).toEqual(['A', 'C'])
   })
 
   it('壊れた manifest は上書きせずエラーにする', async () => {
