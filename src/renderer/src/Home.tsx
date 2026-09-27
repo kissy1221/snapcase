@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { SessionSummary } from '../../shared/api'
+import SettingsDialog from './Settings'
+import { Toaster } from './ui'
 import './assets/home.css'
 
 const JUDGE = [
@@ -29,6 +31,7 @@ export default function Home(): React.JSX.Element {
   const [sessions, setSessions] = useState<SessionSummary[] | null>(null)
   const [name, setName] = useState('')
   const [error, setError] = useState('')
+  const [settings, setSettings] = useState(false)
 
   useEffect(() => {
     window.api.listSessions().then(setSessions)
@@ -45,6 +48,9 @@ export default function Home(): React.JSX.Element {
 
   return (
     <main className="home">
+      <button className="home-gear" onClick={() => setSettings(true)}>
+        設定
+      </button>
       <h1>証跡作ったったー</h1>
       <form
         className="new"
@@ -88,6 +94,8 @@ export default function Home(): React.JSX.Element {
           </li>
         ))}
       </ul>
+      {settings && <SettingsDialog onClose={() => setSettings(false)} />}
+      <Toaster />
     </main>
   )
 }

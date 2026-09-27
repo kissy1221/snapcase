@@ -3,6 +3,24 @@ import type { Manifest, Result } from './types'
 
 export type ExportFormat = 'html' | 'md' | 'pdf' | 'xlsx'
 
+export interface Settings {
+  /** 撮影のグローバルホットキー(Electron の accelerator 形式) */
+  hotkey: string
+  /** 撮影後に編集画面を開く。オフなら注釈・コメント無しでそのまま保存する。 */
+  openEditor: boolean
+  /** セッションの保存先。空なら「書類/証跡作ったったー」。 */
+  dataDir: string
+  /** セッションを閉じるとき・アプリを終了するときに書き出す形式 */
+  exportOnClose: ExportFormat[]
+}
+
+export const DEFAULT_SETTINGS: Settings = {
+  hotkey: 'Control+Alt+S',
+  openEditor: true,
+  dataDir: '',
+  exportOnClose: []
+}
+
 export interface SessionSummary {
   name: string
   /** manifest.json の更新時刻(ms) */
@@ -22,6 +40,13 @@ export interface Api {
   openSession(name: string): Promise<Manifest>
   closeSession(): Promise<void>
   apply(op: Op): Promise<void>
+  getSettings(): Promise<Settings>
+  /** 一部だけ更新する。ホットキーが使えない等のときは error を返し、設定は変えない。 */
+  setSettings(patch: Partial<Settings>): Promise<{ settings: Settings } | { error: string }>
+  /** 保存先のフォルダを選ぶ(選ばなければ null)。 */
+  chooseDataDir(): Promise<string | null>
+  /** ウィンドウを常に手前に表示する(コンパクト表示用)。 */
+  setPinned(pinned: boolean): void
   /** 開いているテストケース。ホットキーでの撮影先になる。 */
   setSelection(tcId: string | null): void
   /** ウィンドウ選択の一覧 / 選んだウィンドウの撮影 */

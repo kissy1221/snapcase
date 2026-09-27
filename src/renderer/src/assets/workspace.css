@@ -626,6 +626,7 @@ th {
 
 /* ---- dialog / form / toast ---- */
 .dialog {
+  margin: auto; /* 全体の margin: 0 で中央寄せが消えないように */
   width: 520px;
   max-width: calc(100vw - 48px);
   padding: 20px 24px;
@@ -864,4 +865,242 @@ input.line {
 .note-s {
   font-size: 12px;
   color: var(--ink3);
+}
+
+/* 検索ボックス(コマンドパレットを開く) */
+.search {
+  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 380px;
+  max-width: 40vw;
+  height: 28px;
+  margin: 0 auto;
+  padding: 0 8px 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  color: var(--ink3);
+  font-size: 13px;
+  cursor: text;
+}
+.search .kbd b {
+  background: var(--paper);
+  color: var(--ink2);
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+.export.gear {
+  margin-left: -4px;
+}
+.home-gear {
+  position: fixed;
+  z-index: 1;
+  top: 8px;
+  right: 16px;
+  -webkit-app-region: no-drag;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  font-size: 13px;
+  cursor: pointer;
+}
+[data-platform='win'] .home-gear {
+  right: 160px;
+}
+
+/* コマンドパレット */
+.dialog:has(.palette-input) {
+  width: 560px;
+  padding: 12px;
+}
+.dialog:has(.palette-input) h2 {
+  display: none;
+}
+.palette-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--paper);
+  font: inherit;
+  color: var(--ink);
+}
+.palette-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.palette-list button {
+  display: block;
+  width: 100%;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  cursor: pointer;
+}
+.palette-list button.on {
+  background: var(--ai-soft);
+}
+.palette-list .none {
+  padding: 12px;
+  font-size: 13px;
+  color: var(--ink3);
+}
+
+/* 設定 */
+.form input.hotkey {
+  width: 12em;
+  cursor: pointer;
+  font-weight: 600;
+}
+.form .field {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink2);
+}
+.form .inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  font-size: 14px;
+  color: var(--ink);
+}
+.form .path {
+  font-family: var(--mono);
+  font-size: 12px;
+  word-break: break-all;
+}
+
+/* コンパクト表示 */
+.compact {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--surface);
+}
+.compact .titlebar {
+  flex: none;
+  height: 40px;
+  justify-content: flex-end;
+  padding-right: 12px;
+}
+[data-platform='win'] .compact .titlebar {
+  padding-right: 150px;
+}
+.pin {
+  -webkit-app-region: no-drag;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink3);
+  cursor: pointer;
+}
+.pin.on {
+  color: var(--ai);
+}
+.cp-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+.cp-body h2 {
+  font-size: 18px;
+  line-height: 1.45;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.compact .seg {
+  display: flex;
+}
+.compact .seg button {
+  flex: 1;
+  padding: 0;
+}
+.big-shutter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 60px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--ai);
+  color: #fff;
+  cursor: pointer;
+}
+.big-shutter .ring {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  display: grid;
+  place-items: center;
+}
+.big-shutter .ring i {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+}
+.big-shutter .label {
+  flex: 1;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 600;
+}
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.thumbs img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px var(--rule);
+}
+.cp-foot {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-top: 1px solid var(--rule);
+}
+.cp-foot button {
+  border: 0;
+  background: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.cp-foot button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+@media (max-width: 560px) {
+  .toast {
+    bottom: 72px;
+  }
 }

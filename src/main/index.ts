@@ -1,7 +1,7 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { registerIpc, unregisterShortcuts } from './ipc'
+import { exportOnClose, registerIpc, unregisterShortcuts } from './ipc'
 import { state } from './state'
 import icon from '../../resources/icon.png?asset'
 
@@ -74,6 +74,14 @@ app.whenReady().then(() => {
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
+// アプリを終了するときも、開いているセッションを(設定があれば)書き出してから終わる。
+let quitting = false
+app.on('before-quit', (e) => {
+  if (quitting) return
+  e.preventDefault()
+  quitting = true
+  exportOnClose().finally(() => app.quit())
+})
 app.on('will-quit', unregisterShortcuts)
 
 app.on('window-all-closed', () => {

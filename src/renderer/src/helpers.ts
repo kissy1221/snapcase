@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react'
 import { nextTcId } from '../../shared/ops'
 import type { Manifest, Result } from '../../shared/types'
 import { getSelection, select, toast } from './store'
@@ -52,3 +53,14 @@ export async function dropFiles(files: FileList): Promise<void> {
   if (spec) return importTestCases(window.api.pathForFile(spec))
   await addImageFiles(files)
 }
+
+const query = window.matchMedia('(max-width: 560px)')
+/** ウィンドウを細くしたらコンパクト表示にする。 */
+export const useCompact = (): boolean =>
+  useSyncExternalStore(
+    (cb) => {
+      query.addEventListener('change', cb)
+      return () => query.removeEventListener('change', cb)
+    },
+    () => query.matches
+  )

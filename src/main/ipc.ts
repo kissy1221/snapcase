@@ -14,8 +14,16 @@ import { basename, join } from 'path'
 import { pathToFileURL } from 'url'
 import type { Op } from '../shared/ops'
 import { captureForeground, CaptureError, captureSource, listWindows } from './capture'
-import { editorCurrent, editorDiscard, editorSave, enqueue } from './editor'
-import type { ExportFormat } from '../shared/api'
+import {
+  editorCurrent,
+  editorDiscard,
+  editorSave,
+  enqueue,
+  saveDirect,
+  type Pending
+} from './editor'
+import { getSettings, saveSettings } from './settings'
+import type { ExportFormat, Settings } from '../shared/api'
 import { exportSession, scheduleLiveOutputs } from './export'
 import { loadTestCases } from './import'
 import { listSessions, Session } from './session'
@@ -23,14 +31,34 @@ import { broadcast, sendToast, state, targetTestCase } from './state'
 
 // EVIDENCE_DATA_DIR は自動テスト用。実データを汚さないために保存先を差し替える。
 const root = (): string =>
-  process.env.EVIDENCE_DATA_DIR ?? join(app.getPath('documents'), '証跡作ったったー')
+  process.env.EVIDENCE_DATA_DIR ||
+  getSettings().dataDir ||
+  join(app.getPath('documents'), '証跡作ったったー')
 
 // 画像は evidence://img/<ファイル名> で renderer に渡す(file:// を許可せずに済む)。
 protocol.registerSchemesAsPrivileged([
   { scheme: 'evidence', privileges: { standard: true, secure: true, supportFetchAPI: true } }
 ])
 
-const HOTKEY = 'Control+Alt+S'
+/** 撮った画像を、設定に応じて「編集画面へ」か「そのまま保存」に振り分ける。 */
+const takeShot = (p: Pending): Promise<void> | void =>
+  getSettings().openEditor ? enqueue([p]) : saveDirect(p)
+
+/** ホットキーを登録し直す。登録できなければ元に戻して false。 */
+function registerHotkey(next: string): boolean {
+  const prev = registered
+  if (prev) globalShortcut.unregister(prev)
+  let ok = false
+  try {
+    ok = globalShortcut.register(next, () => void captureHotkey())
+  } catch {
+    ok = false
+  }
+  if (!ok && prev) globalShortcut.register(prev, () => void captureHotkey())
+  if (ok) registered = next
+  return ok
+}
+let registered = ''
 
 function notify(body: string): void {
   sendToast({ msg: body })
@@ -47,7 +75,7 @@ async function captureHotkey(): Promise<void> {
     )
   }
   try {
-    enqueue([{ ...(await captureForeground()), tcId, restoreFocus: true }])
+    await takeShot({ ...(await captureForeground()), tcId, restoreFocus: true })
   } catch (e) {
     notify(e instanceof CaptureError ? e.message : '撮影に失敗しました。')
   }
@@ -65,7 +93,7 @@ export function registerIpc(): void {
     if (!state.session || !name) return new Response(null, { status: 404 })
     return net.fetch(pathToFileURL(join(state.session.imageDir, name)).toString())
   })
-  globalShortcut.register(HOTKEY, () => void captureHotkey())
+  registerHotkey(getSettings().hotkey)
 
   ipcMain.handle('sessions:list', () => listSessions(root()))
   ipcMain.handle('session:open', async (_e, name: string) => {
@@ -76,7 +104,8 @@ export function registerIpc(): void {
     broadcast()
     return state.session.manifest
   })
-  ipcMain.handle('session:close', () => {
+  ipcMain.handle('session:close', async () => {
+    await exportOnClose()
     state.session = null
     state.selectedTc = null
     broadcast()
@@ -88,12 +117,28 @@ export function registerIpc(): void {
   })
   ipcMain.on('selection', (_e, id: string | null) => (state.selectedTc = id))
 
+  ipcMain.handle('settings:get', () => getSettings())
+  ipcMain.handle('settings:set', (_e, patch: Partial<Settings>) => {
+    if (patch.hotkey && patch.hotkey !== registered && !registerHotkey(patch.hotkey))
+      return { error: `${patch.hotkey} は他のアプリが使っているため登録できませんでした。` }
+    return { settings: saveSettings(patch) }
+  })
+  ipcMain.handle('settings:dataDir', async () => {
+    const r = await dialog.showOpenDialog(state.mainWindow ?? BrowserWindow.getAllWindows()[0], {
+      properties: ['openDirectory', 'createDirectory']
+    })
+    return r.canceled ? null : r.filePaths[0]
+  })
+  ipcMain.on('window:pin', (_e, pinned: boolean) =>
+    state.mainWindow?.setAlwaysOnTop(pinned, 'floating')
+  )
+
   ipcMain.handle('capture:list', () => listWindows())
   ipcMain.handle('capture:source', async (_e, id: string) => {
     const tcId = targetTestCase()
     if (!tcId) return
     try {
-      enqueue([{ ...(await captureSource(id)), tcId, restoreFocus: false }])
+      await takeShot({ ...(await captureSource(id)), tcId, restoreFocus: false })
     } catch (e) {
       notify(e instanceof CaptureError ? e.message : '撮影に失敗しました。')
     }
@@ -172,3 +217,22 @@ export function registerIpc(): void {
 }
 
 export const unregisterShortcuts = (): void => globalShortcut.unregisterAll()
+
+/** 「閉じるときに書き出す」の設定があれば、開いているセッションを書き出す。 */
+export async function exportOnClose(): Promise<void> {
+  const formats = getSettings().exportOnClose
+  const s = state.session
+  if (!s || !formats.length || !s.manifest.testcases.some((t) => t.entries.length)) return
+  try {
+    const files = await exportSession(s, formats)
+    new Notification({
+      title: '証跡作ったったー',
+      body: `${files.join('、')} を書き出しました`
+    }).show()
+  } catch {
+    new Notification({
+      title: '証跡作ったったー',
+      body: '書き出しに失敗しました。手動で書き出してください。'
+    }).show()
+  }
+}

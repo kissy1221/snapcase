@@ -4,28 +4,32 @@ import type { Manifest } from '../../shared/types'
 import { addTestCase, HOTKEY_LABEL } from './helpers'
 import { Dialog } from './ui'
 
-/** 画面下部の撮影ボタン。押すと撮影するウィンドウを選べる。 */
-export function Shutter({ m, target }: { m: Manifest; target: string | null }): React.JSX.Element {
-  const [picking, setPicking] = useState(false)
+/** 画面下部の撮影ボタン。押すと撮影するウィンドウを選べる(選択は親が開く)。 */
+export function Shutter({
+  m,
+  target,
+  onPick
+}: {
+  m: Manifest
+  target: string | null
+  onPick: () => void
+}): React.JSX.Element {
   return (
-    <>
-      <button className="shutter" onClick={() => (target ? setPicking(true) : addTestCase(m))}>
-        <span className="ring">
-          <i />
-        </span>
-        <span className="label num">{target ? `${target} に撮影` : 'テストケースを追加'}</span>
-        <span className="kbd">
-          {HOTKEY_LABEL.map((k) => (
-            <b key={k}>{k}</b>
-          ))}
-        </span>
-      </button>
-      {picking && <WindowPicker onClose={() => setPicking(false)} />}
-    </>
+    <button className="shutter" onClick={() => (target ? onPick() : addTestCase(m))}>
+      <span className="ring">
+        <i />
+      </span>
+      <span className="label num">{target ? `${target} に撮影` : 'テストケースを追加'}</span>
+      <span className="kbd">
+        {HOTKEY_LABEL.map((k) => (
+          <b key={k}>{k}</b>
+        ))}
+      </span>
+    </button>
   )
 }
 
-function WindowPicker({ onClose }: { onClose: () => void }): React.JSX.Element {
+export function WindowPicker({ onClose }: { onClose: () => void }): React.JSX.Element {
   const [list, setList] = useState<WindowChoice[] | null>(null)
   const [error, setError] = useState('')
   useEffect(() => {

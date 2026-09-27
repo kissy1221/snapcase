@@ -87,24 +87,32 @@ export function enqueue(items: Pending[]): void {
 export const editorCurrent = async (): Promise<EditorItem | null> =>
   current ? toItem(current) : null
 
+/** 画像を images/ に書き、テストケースに証跡として追加する。 */
+async function persist(item: Pending, png: Buffer, tcId: string, comment: string): Promise<void> {
+  const session = state.session
+  if (!session) return
+  const name = nextImageName(session.manifest)
+  await writeFile(join(session.imageDir, name), png)
+  await session.apply({
+    t: 'addEntry',
+    tcId,
+    comment,
+    blocks: [{ type: 'image', image: name, title: item.title, url: await item.url }]
+  })
+  broadcast()
+  sendToast({ msg: `${tcId} に証跡を追加しました`, undo: true })
+}
+
+/** 編集画面を開かずに、撮った画像をそのまま保存する。 */
+export const saveDirect = (item: Pending): Promise<void> => persist(item, item.bytes, item.tcId, '')
+
 export async function editorSave(r: {
   png: ArrayBuffer
   comment: string
   tcId: string
 }): Promise<void> {
-  const item = current
-  const session = state.session
-  if (!item || !session) return
-  const name = nextImageName(session.manifest)
-  await writeFile(join(session.imageDir, name), Buffer.from(r.png))
-  await session.apply({
-    t: 'addEntry',
-    tcId: r.tcId,
-    comment: r.comment,
-    blocks: [{ type: 'image', image: name, title: item.title, url: await item.url }]
-  })
-  broadcast()
-  sendToast({ msg: `${r.tcId} に証跡を追加しました`, undo: true })
+  if (!current) return
+  await persist(current, Buffer.from(r.png), r.tcId, r.comment)
   await advance()
 }
 
