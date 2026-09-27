@@ -1,6 +1,6 @@
 import { nextTcId } from '../../shared/ops'
 import type { Manifest, Result } from '../../shared/types'
-import { getSelection, select } from './store'
+import { getSelection, select, toast } from './store'
 
 export const RESULT_CLASS: Record<Result, string> = { OK: 'ok', NG: 'ng', 保留: 'hold', 未実施: '' }
 export const COLOR: Record<Result, string> = {
@@ -33,4 +33,22 @@ export async function addImageFiles(files: FileList | File[]): Promise<boolean> 
     )
   )
   return true
+}
+
+const isSpec = (f: File): boolean => /\.(csv|xlsx|xlsm)$/i.test(f.name)
+
+/** CSV / Excel からテストケースを取り込み、結果を通知する。path 無しはファイル選択。 */
+export async function importTestCases(path?: string): Promise<void> {
+  const r = await window.api.importTestCases(path)
+  if (!r) return
+  toast(
+    'error' in r ? `取り込めませんでした: ${r.error}` : `${r.count}件のテストケースを取り込みました`
+  )
+}
+
+/** ドロップされたファイルを、画像なら証跡へ、CSV / Excel ならテストケースへ取り込む。 */
+export async function dropFiles(files: FileList): Promise<void> {
+  const spec = [...files].find(isSpec)
+  if (spec) return importTestCases(window.api.pathForFile(spec))
+  await addImageFiles(files)
 }

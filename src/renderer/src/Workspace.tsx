@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import type { Manifest } from '../../shared/types'
 import { Shutter } from './Capture'
-import { addImageFiles, targetOf } from './helpers'
+import { addImageFiles, dropFiles, targetOf } from './helpers'
 import Overview from './Overview'
 import Sidebar from './Sidebar'
 import { OVERVIEW, select, useSelection } from './store'
@@ -44,7 +44,7 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
         onDrop={(e) => {
           if (!e.dataTransfer.files.length) return
           e.preventDefault()
-          addImageFiles(e.dataTransfer.files)
+          dropFiles(e.dataTransfer.files)
         }}
       >
         {tc ? <TestCasePage key={tc.id} m={m} tc={tc} /> : <Overview m={m} />}

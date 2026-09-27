@@ -29,6 +29,10 @@ export interface Api {
   pickImages(): Promise<void>
   /** 貼り付け・ドロップされた画像を追加する。 */
   addImages(files: { name: string; bytes: ArrayBuffer; mime: string }[]): Promise<void>
+  /** CSV / Excel からテストケースを取り込む。path が無ければファイル選択を出す。選ばなければ null。 */
+  importTestCases(path?: string): Promise<{ count: number } | { error: string } | null>
+  /** ドロップされたファイルの実パス */
+  pathForFile(file: File): string
   onToast(cb: (t: ToastEvent) => void): () => void
 
   /** 編集画面(別ウィンドウ)用 */

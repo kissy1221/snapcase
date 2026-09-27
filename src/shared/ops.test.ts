@@ -129,6 +129,13 @@ describe('記録とブロック', () => {
   })
 })
 
+describe('ID の一意性', () => {
+  it('既存と同じ ID を追加しても重複しない(取り込み・ファイル内の重複も含む)', () => {
+    const m = run(base(), { t: 'addTestCases', tcs: [{ id: 'A' }, { id: 'A' }, { id: 'X' }] })
+    expect(ids(m)).toEqual(['A', 'B', 'C', 'D', 'A-2', 'A-3', 'X'])
+  })
+})
+
 describe('採番と通し番号', () => {
   it('nextTcId は削除しても既存の ID と重ならない', () => {
     let m = run(

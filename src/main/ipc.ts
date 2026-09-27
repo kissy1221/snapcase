@@ -14,6 +14,7 @@ import { pathToFileURL } from 'url'
 import type { Op } from '../shared/ops'
 import { captureForeground, CaptureError, captureSource, listWindows } from './capture'
 import { editorCurrent, editorDiscard, editorSave, enqueue } from './editor'
+import { loadTestCases } from './import'
 import { listSessions, Session } from './session'
 import { broadcast, sendToast, state, targetTestCase } from './state'
 
@@ -129,6 +130,26 @@ export function registerIpc(): void {
       )
     }
   )
+
+  ipcMain.handle('testcases:import', async (_e, path?: string) => {
+    if (!state.session) return { error: '先にセッションを開いてください。' }
+    if (!path) {
+      const r = await dialog.showOpenDialog(state.mainWindow ?? BrowserWindow.getAllWindows()[0], {
+        properties: ['openFile'],
+        filters: [{ name: 'テスト仕様（CSV / Excel）', extensions: ['csv', 'xlsx', 'xlsm'] }]
+      })
+      if (r.canceled || !r.filePaths[0]) return null
+      path = r.filePaths[0]
+    }
+    try {
+      const tcs = await loadTestCases(path)
+      await state.session.apply({ t: 'addTestCases', tcs })
+      broadcast()
+      return { count: tcs.length }
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : '取り込めませんでした。' }
+    }
+  })
 
   ipcMain.handle('editor:current', () => editorCurrent())
   ipcMain.handle('editor:save', (_e, r) => editorSave(r))

@@ -38,6 +38,14 @@ export function emptyManifest(session: string): Manifest {
 const imagesOf = (e: Entry): string[] =>
   e.blocks.flatMap((b) => (b.type === 'image' && b.image ? [b.image] : []))
 
+/** 既存の ID と重なるときは -2, -3 … を付けて一意にする(ID は操作の対象を指すキーなので重複させない)。 */
+export function uniqueId(m: Manifest, id: string): string {
+  const taken = new Set(m.testcases.map((t) => t.id))
+  let out = id
+  for (let n = 2; taken.has(out); n++) out = `${id}-${n}`
+  return out
+}
+
 export function newTestCase(m: Manifest, p: Partial<Omit<TestCase, 'entries'>> = {}): TestCase {
   return {
     id: p.id?.trim() || nextTcId(m),
@@ -154,10 +162,12 @@ export function apply(src: Manifest, op: Op): Applied {
       m.meta = { ...m.meta, ...op.meta }
       break
     case 'addTestCase':
-      m.testcases.push(newTestCase(m, op.tc))
-      break
     case 'addTestCases':
-      for (const p of op.tcs) m.testcases.push(newTestCase(m, p))
+      for (const p of op.t === 'addTestCase' ? [op.tc] : op.tcs) {
+        const tc = newTestCase(m, p)
+        tc.id = uniqueId(m, tc.id)
+        m.testcases.push(tc)
+      }
       break
     case 'updateTestCase': {
       const tc = tcOf(op.id)

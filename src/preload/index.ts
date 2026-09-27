@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { Api } from '../shared/api'
 
 /** main → renderer の通知を購読し、解除関数を返す。 */
@@ -18,6 +18,8 @@ const api: Api = {
   captureSource: (id) => ipcRenderer.invoke('capture:source', id),
   pickImages: () => ipcRenderer.invoke('images:pick'),
   addImages: (files) => ipcRenderer.invoke('images:add', files),
+  importTestCases: (path) => ipcRenderer.invoke('testcases:import', path),
+  pathForFile: (file) => webUtils.getPathForFile(file),
   onToast: (cb) => on('toast', cb),
   editor: {
     current: () => ipcRenderer.invoke('editor:current'),

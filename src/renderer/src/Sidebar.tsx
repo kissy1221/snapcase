@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { GROUP_NONE, RESULTS } from '../../shared/constants'
 import { orderedGroups } from '../../shared/ops'
 import type { Manifest } from '../../shared/types'
-import { COLOR, RESULT_CLASS, addTestCase } from './helpers'
+import { COLOR, RESULT_CLASS, addTestCase, importTestCases } from './helpers'
 import { OVERVIEW, select, useSelection } from './store'
 
 export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
@@ -120,6 +120,9 @@ export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
       <div className="side-foot">
         <button className="add" onClick={() => addTestCase(m)}>
           ＋ テストケースを追加
+        </button>
+        <button className="add" onClick={() => importTestCases()}>
+          CSV / Excel から取り込む
         </button>
         {m.testcases.length > 0 && (
           <>
