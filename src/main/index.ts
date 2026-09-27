@@ -33,7 +33,8 @@ function createWindow(): void {
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
+    // 利用者が入力したリンクを開くので、http(s) と mailto 以外(file: など)は開かない。
+    if (/^(https?|mailto):/i.test(details.url)) shell.openExternal(details.url)
     return { action: 'deny' }
   })
 

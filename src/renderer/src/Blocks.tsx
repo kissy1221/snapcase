@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { BANNER_LEVELS, CODE_LANGS } from '../../shared/constants'
 import { highlight } from '../../shared/highlight'
-import { linksToText, parseLinks, parseTable, tableToText } from '../../shared/parse'
+import { parseTable, tableToText } from '../../shared/parse'
 import type { Block } from '../../shared/types'
 import { BLOCK_LABEL, type TextBlockType } from './blockMeta'
 import { Dialog } from './ui'
@@ -111,7 +111,7 @@ const emptyBlock = (t: TextBlockType): Block => {
     case 'banner':
       return { type: 'banner', level: 'info', text: '' }
     case 'link':
-      return { type: 'link', links: [] }
+      return { type: 'link', links: [{ label: '', url: '' }] }
   }
 }
 
@@ -128,15 +128,15 @@ export function BlockDialog({
   onClose: () => void
 }): React.JSX.Element {
   const [b, setB] = useState<Block>(initial ?? emptyBlock(type))
-  // 表とリンクは貼り付けやすいよう、編集中はテキストで持つ。
-  const [text, setText] = useState(
-    b.type === 'table'
-      ? tableToText(b.columns, b.rows)
-      : b.type === 'link'
-        ? linksToText(b.links)
-        : ''
-  )
+  // 表は貼り付けやすいよう、編集中はテキストで持つ。
+  const [text, setText] = useState(b.type === 'table' ? tableToText(b.columns, b.rows) : '')
   const patch = (p: Record<string, unknown>): void => setB({ ...b, ...p } as Block)
+
+  /** リンクの i 行目を部分的に書き換える。 */
+  const setLink = (i: number, p: { label?: string; url?: string }): void => {
+    if (b.type !== 'link') return
+    patch({ links: b.links.map((l, j) => (j === i ? { ...l, ...p } : l)) })
+  }
 
   const build = (): Block | null => {
     if (b.type === 'table') {
@@ -144,7 +144,10 @@ export function BlockDialog({
       return t.rows.length || t.columns.length ? { ...b, ...t } : null
     }
     if (b.type === 'link') {
-      const links = parseLinks(text)
+      // URL が空の行は捨てる。ラベルは空でもよい(その場合は URL を表示する)。
+      const links = b.links
+        .map((l) => ({ label: l.label.trim(), url: l.url.trim() }))
+        .filter((l) => l.url)
       return links.length ? { ...b, links } : null
     }
     if (b.type === 'code') return b.text.trim() ? b : null
@@ -277,16 +280,52 @@ export function BlockDialog({
           </>
         )}
         {b.type === 'link' && (
-          <label>
-            1行に1件（「ラベル ⇥ URL」「ラベル|URL」または URL だけ）
-            <textarea
-              className="mono"
-              rows={5}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              autoFocus
-            />
-          </label>
+          <div className="field">
+            <span className="lbl">リンク</span>
+            <div className="link-rows">
+              {b.links.map((l, i) => (
+                <div className="link-row" key={i}>
+                  <input
+                    aria-label={`ラベル ${i + 1}`}
+                    placeholder="ラベル（例: #482 ログイン失敗）"
+                    value={l.label}
+                    onChange={(e) => setLink(i, { label: e.target.value })}
+                    autoFocus={i === 0}
+                  />
+                  <input
+                    aria-label={`URL ${i + 1}`}
+                    placeholder="https://…"
+                    inputMode="url"
+                    value={l.url}
+                    onChange={(e) => setLink(i, { url: e.target.value })}
+                  />
+                  <button
+                    type="button"
+                    className="x"
+                    aria-label={`リンク ${i + 1} を削除`}
+                    disabled={b.links.length === 1 && !l.label && !l.url}
+                    onClick={() =>
+                      patch({
+                        links:
+                          b.links.length === 1
+                            ? [{ label: '', url: '' }]
+                            : b.links.filter((_, j) => j !== i)
+                      })
+                    }
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                className="chip"
+                onClick={() => patch({ links: [...b.links, { label: '', url: '' }] })}
+              >
+                ＋ リンクを追加
+              </button>
+            </div>
+          </div>
         )}
         <div className="actions">
           <button type="button" onClick={onClose}>
