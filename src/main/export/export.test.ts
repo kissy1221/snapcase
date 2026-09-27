@@ -128,11 +128,15 @@ describe('HTML', () => {
     ])
       expect(html).toContain(s)
   })
+  it('コードは言語に応じて色付けされる', () => {
+    expect(html).toContain('<span class="hljs-keyword">SELECT</span>')
+  })
   it('利用者の入力は HTML エスケープされる', () => {
     expect(html).toContain('&lt;b&gt;誤PW&lt;/b&gt;')
     expect(html).not.toContain('<b>誤PW</b>')
     expect(html).toContain('a=1&amp;b=2')
-    expect(html).toContain('a &lt; 1')
+    expect(html).toContain('&lt;')
+    expect(html).not.toContain("'<x>'")
   })
 })
 

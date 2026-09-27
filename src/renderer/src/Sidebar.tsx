@@ -96,6 +96,17 @@ export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
                       e.preventDefault()
                       e.stopPropagation()
                       setOver(null)
+                      const entry = Number(e.dataTransfer.getData('text/entry'))
+                      if (entry) {
+                        // 証跡を、このテストケースの末尾へ移す。
+                        window.api.apply({
+                          t: 'moveEntryTo',
+                          no: entry,
+                          toTcId: tc.id,
+                          beforeNo: null
+                        })
+                        return
+                      }
                       const id = e.dataTransfer.getData('text/tc')
                       if (id && id !== tc.id)
                         window.api.apply({
