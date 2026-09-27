@@ -83,7 +83,7 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
       { id: 'redo', label: 'やり直す', run: () => void window.api.redo() },
       {
         id: 'undolast',
-        label: '直前に撮った証跡を取り消す',
+        label: '直前の撮影を取り消す',
         run: () => window.api.apply({ t: 'undoLast' })
       },
       {
@@ -91,7 +91,7 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
         label: 'CSV / Excel からテストケースを取り込む',
         run: () => importTestCases()
       },
-      { id: 'export', label: '証跡を書き出す', run: () => setOverlay('export') },
+      { id: 'export', label: '書き出す', run: () => setOverlay('export') },
       { id: 'overview', label: '概要と実施情報を開く', run: () => select(OVERVIEW) },
       { id: 'settings', label: '設定', run: () => setOverlay('settings') },
       { id: 'home', label: 'ホームへ戻る', run: () => window.api.closeSession() }

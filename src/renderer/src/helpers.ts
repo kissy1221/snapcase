@@ -47,7 +47,7 @@ export async function importTestCases(path?: string): Promise<void> {
   )
 }
 
-/** ドロップされたファイルを、画像なら証跡へ、CSV / Excel ならテストケースへ取り込む。 */
+/** ドロップされたファイルを、画像ならステップへ、CSV / Excel ならテストケースへ取り込む。 */
 export async function dropFiles(files: FileList): Promise<void> {
   const spec = [...files].find(isSpec)
   if (spec) return importTestCases(window.api.pathForFile(spec))

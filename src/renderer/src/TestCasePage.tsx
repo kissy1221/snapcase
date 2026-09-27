@@ -89,11 +89,11 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
       : []),
     { label: '', heading: true },
     {
-      label: 'この証跡を削除',
+      label: 'このステップを削除',
       danger: true,
       run: () => {
         apply({ t: 'deleteEntry', tcId: tc.id, no })
-        undoToast('証跡を削除しました')
+        undoToast('ステップを削除しました')
       }
     }
   ]
@@ -211,11 +211,13 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
       </dl>
 
       <div className="sec-head">
-        <h2>証跡</h2>
+        <h2>ステップ</h2>
         <span className="num">{tc.entries.length}件</span>
       </div>
       {tc.entries.length === 0 && (
-        <p className="empty">まだ証跡がありません。撮影するか、下の「証跡を追加」から作れます。</p>
+        <p className="empty">
+          まだステップがありません。撮影するか、下の「ステップを追加」から作れます。
+        </p>
       )}
 
       {tc.entries.map((e, i) => (
@@ -229,7 +231,7 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
           onDragOver={(ev) => hover(ev, 'e' + e.no, ['text/entry', 'text/block'])}
           onDragLeave={() => setOver(null)}
           onDrop={(ev) => {
-            // ブロックは、この証跡の末尾へ。証跡は、この証跡の直前へ。
+            // ブロックは、このステップの末尾へ。ステップは、このステップの直前へ。
             const blk = ev.dataTransfer.getData('text/block')
             if (blk) return dropBlock(ev, blk, e.no, Infinity)
             dropEntry(ev, e.no)
@@ -258,7 +260,12 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
                 onCommit={(v) => apply({ t: 'setEntryComment', tcId: tc.id, no: e.no, comment: v })}
               />
               <span className="time num">{e.time.slice(11)}</span>
-              <Menu label="この証跡の操作" trigger="⋯" items={entryMenu(e.no, i)} className="end" />
+              <Menu
+                label="このステップの操作"
+                trigger="⋯"
+                items={entryMenu(e.no, i)}
+                className="end"
+              />
             </div>
             <div className="blocks">
               {e.blocks.map((b, j) => (
@@ -279,7 +286,7 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
                   <span
                     className="grip handle"
                     draggable
-                    title="ドラッグして移動（別の証跡へも）"
+                    title="ドラッグして移動（別のステップへも）"
                     onDragStart={(ev) => {
                       ev.dataTransfer.setData('text/block', `${e.no}:${j}`)
                       ev.dataTransfer.setDragImage(ev.currentTarget.closest('.block')!, 0, 0)
@@ -347,8 +354,8 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
         <div className="marker">＋</div>
         <div className="chips">
           <Menu
-            label="新しい証跡を追加"
-            trigger="証跡を追加"
+            label="ステップを追加"
+            trigger="ステップを追加"
             items={addItems()}
             className="add-entry"
           />

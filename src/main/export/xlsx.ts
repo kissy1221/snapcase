@@ -20,7 +20,7 @@ export const pngSize = (b: Buffer): { w: number; h: number } => ({
 
 export async function renderXlsx(d: Doc): Promise<Buffer> {
   const wb = new ExcelJS.Workbook()
-  const ws = wb.addWorksheet('証跡', { views: [{ showGridLines: false }] })
+  const ws = wb.addWorksheet('テスト結果', { views: [{ showGridLines: false }] })
   ws.getColumn(1).width = 24
   ws.getColumn(2).width = 110
   let r = 0
@@ -47,7 +47,7 @@ export async function renderXlsx(d: Doc): Promise<Buffer> {
 
   ws.getCell(++r, 1).value = `テスト証跡: ${d.name}`
   ws.getCell(r, 1).font = { bold: true, size: 14 }
-  ws.getCell(++r, 1).value = `生成: ${d.generated} ／ 証跡 ${d.entryCount}件`
+  ws.getCell(++r, 1).value = `生成: ${d.generated} ／ ステップ ${d.entryCount}件`
   ws.getCell(r, 1).font = { color: { argb: 'FF666666' } }
   r++
 

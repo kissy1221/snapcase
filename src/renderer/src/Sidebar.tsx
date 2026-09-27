@@ -82,7 +82,7 @@ export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
                     setOver(null)
                     const entry = Number(e.dataTransfer.getData('text/entry'))
                     if (entry) {
-                      // 証跡を、このテストケースの末尾へ移す。
+                      // ステップを、このテストケースの末尾へ移す。
                       window.api.apply({
                         t: 'moveEntryTo',
                         no: entry,

@@ -47,7 +47,7 @@ function openWindow(): BrowserWindow {
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#1e2127',
-    title: '証跡の編集',
+    title: '画像の編集',
     webPreferences: { preload: join(__dirname, '../preload/index.js'), sandbox: false }
   })
   w.on('ready-to-show', () => w.show())
@@ -87,7 +87,7 @@ export function enqueue(items: Pending[]): void {
 export const editorCurrent = async (): Promise<EditorItem | null> =>
   current ? toItem(current) : null
 
-/** 画像を images/ に書き、テストケースに証跡として追加する。 */
+/** 画像を images/ に書き、テストケースにステップとして追加する。 */
 async function persist(item: Pending, png: Buffer, tcId: string, comment: string): Promise<void> {
   const session = state.session
   if (!session) return
@@ -100,7 +100,7 @@ async function persist(item: Pending, png: Buffer, tcId: string, comment: string
     blocks: [{ type: 'image', image: name, title: item.title, url: await item.url }]
   })
   broadcast()
-  sendToast({ msg: `${tcId} に証跡を追加しました`, undo: true })
+  sendToast({ msg: `${tcId} にステップを追加しました`, undo: true })
 }
 
 /** 編集画面を開かずに、撮った画像をそのまま保存する。 */

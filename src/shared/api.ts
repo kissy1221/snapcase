@@ -29,7 +29,7 @@ export interface SessionSummary {
   total: number
   /** 判定ごとのテストケース数 */
   counts: Record<Result, number>
-  /** 記録(証跡)の総数 */
+  /** ステップの総数 */
   entries: number
 }
 

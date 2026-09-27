@@ -159,7 +159,7 @@ describe('Excel', () => {
   it('実施情報・テストケース・各ブロックの文字と、画像が埋め込まれる', async () => {
     const wb = new ExcelJS.Workbook()
     await wb.xlsx.load((await renderXlsx(doc())) as unknown as ExcelJS.Buffer)
-    const ws = wb.getWorksheet('証跡')!
+    const ws = wb.getWorksheet('テスト結果')!
     const texts: string[] = []
     ws.eachRow((row) => row.eachCell((c) => texts.push(String(c.value))))
     for (const s of [

@@ -109,14 +109,14 @@ export function renderHtml(d: Doc): string {
   const h: string[] = [
     `<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><title>テスト証跡: ${esc(d.name)}</title><style>${CSS}</style></head><body><a id="top"></a>`,
     `<h1>テスト証跡: ${esc(d.name)}</h1>`,
-    `<div class="meta">生成: ${d.generated} ／ テストケース ${tcCount}件 ／ 証跡 ${d.entryCount}件</div>`
+    `<div class="meta">生成: ${d.generated} ／ テストケース ${tcCount}件 ／ ステップ ${d.entryCount}件</div>`
   ]
   if (d.meta.length)
     h.push(
       `<table class="sessmeta">${d.meta.map(([l, v]) => `<tr><th>${esc(l)}</th><td>${esc(v)}</td></tr>`).join('')}</table>`
     )
   h.push(
-    '<div class="toc"><h2>テストケース一覧（目次）</h2><table><tr><th>ID</th><th>項目名</th><th>分類</th><th>判定</th><th class="n">証跡</th></tr>'
+    '<div class="toc"><h2>テストケース一覧（目次）</h2><table><tr><th>ID</th><th>項目名</th><th>分類</th><th>判定</th><th class="n">ステップ</th></tr>'
   )
   for (const g of d.groups) {
     h.push(`<tr class="gtr"><td colspan="5">${esc(g.name)}</td></tr>`)

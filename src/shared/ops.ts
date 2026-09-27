@@ -288,7 +288,7 @@ export function apply(src: Manifest, op: Op): Applied {
         swap(cur.e.blocks, op.index, to)
         break
       }
-      // 端では、同じテストケースの隣の証跡へ移る(上端→前の証跡の末尾、下端→次の証跡の先頭)。
+      // 端では、同じテストケースの隣のステップへ移る(上端→前のステップの末尾、下端→次のステップの先頭)。
       const es = cur.t.entries
       const at = es.indexOf(cur.e)
       const next = es[at + op.delta]

@@ -12,13 +12,13 @@ export default function Overview({ m }: { m: Manifest }): React.JSX.Element {
       <div className="crumb">概要</div>
       <h1 className="title static">{m.session}</h1>
       <p className="summary num">
-        テストケース {m.testcases.length}件 ・ 証跡 {entries}件{' ・ '}
+        テストケース {m.testcases.length}件 ・ ステップ {entries}件{' ・ '}
         {RESULTS.map((r) => `${r} ${m.testcases.filter((t) => t.result === r).length}`).join(' / ')}
       </p>
 
       <div className="sec-head">
         <h2>実施情報</h2>
-        <span>書き出した証跡の先頭に載ります。空欄の項目は載りません。</span>
+        <span>書き出したファイルの先頭に載ります。空欄の項目は載りません。</span>
       </div>
       <dl className="props flat">
         {META_FIELDS.map(([k, label]) => (

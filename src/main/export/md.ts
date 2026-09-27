@@ -49,7 +49,7 @@ export function renderMarkdown(d: Doc): string {
   const out = [
     `# テスト証跡: ${d.name}`,
     '',
-    `生成: ${d.generated} ／ テストケース ${d.groups.reduce((n, g) => n + g.tcs.length, 0)}件 ／ 証跡 ${d.entryCount}件`,
+    `生成: ${d.generated} ／ テストケース ${d.groups.reduce((n, g) => n + g.tcs.length, 0)}件 ／ ステップ ${d.entryCount}件`,
     ''
   ]
   if (d.meta.length)

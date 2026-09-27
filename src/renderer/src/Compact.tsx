@@ -80,7 +80,7 @@ export default function Compact({
           </button>
           <div>
             <div className="sec-head">
-              <h2>証跡</h2>
+              <h2>ステップ</h2>
               <span className="num">{tc.entries.length}件</span>
             </div>
             <div className="thumbs">

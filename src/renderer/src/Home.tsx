@@ -87,7 +87,7 @@ export default function Home(): React.JSX.Element {
             <button onClick={() => open(s.name)}>
               <span className="name">{s.name}</span>
               <span className="meta num">
-                テストケース {s.total}件 ・ 証跡 {s.entries}件 ・ {fmt.format(s.updatedAt)}
+                テストケース {s.total}件 ・ ステップ {s.entries}件 ・ {fmt.format(s.updatedAt)}
               </span>
               <Progress s={s} />
             </button>
