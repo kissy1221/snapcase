@@ -25,14 +25,17 @@ export class Session {
     if (!name) throw new Error('セッション名を入力してください')
     const dir = join(root, name)
     await mkdir(join(dir, 'images'), { recursive: true })
-    let manifest = emptyManifest(name)
     try {
-      manifest = normalize(JSON.parse(await readFile(join(dir, 'manifest.json'), 'utf-8')), name)
+      const raw = JSON.parse(await readFile(join(dir, 'manifest.json'), 'utf-8'))
+      return new Session(dir, normalize(raw, name))
     } catch (e) {
       // manifest が無い(新規)のは正常。壊れている場合は上書きせず、開けないと伝える。
       if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw new Error('manifest.json を読み込めません')
     }
-    return new Session(dir, manifest)
+    // 新規は即保存する。保存しないと、最初の操作までホームの一覧に出ない。
+    const s = new Session(dir, emptyManifest(name))
+    await s.save()
+    return s
   }
 
   /** 操作を適用して保存する。参照されなくなった画像は images/ から消す。 */

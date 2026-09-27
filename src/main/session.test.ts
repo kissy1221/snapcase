@@ -35,6 +35,11 @@ describe('Session', () => {
     expect(await readFile(join(root, 'bad', 'manifest.json'), 'utf-8')).toBe('{ not json')
   })
 
+  it('新規作成した直後から一覧に出る', async () => {
+    await Session.open(root, 'fresh')
+    expect((await listSessions(root)).map((x) => x.name)).toEqual(['fresh'])
+  })
+
   it('空のセッション名は拒否する', async () => {
     await expect(Session.open(root, '  ')).rejects.toThrow()
   })
