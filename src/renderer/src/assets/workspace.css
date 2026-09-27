@@ -729,9 +729,11 @@ input.line {
 }
 
 .shutter {
-  position: absolute;
+  /* main 列(サイドバー296px分を除いた領域)の中央に固定する。position: absolute だと
+     .main のスクロールに巻き込まれて途中で真ん中に浮いてしまうため、fixed で切り離す。 */
+  position: fixed;
   z-index: 2;
-  left: 50%;
+  left: calc(50% + 148px);
   bottom: 24px;
   transform: translateX(-50%);
   display: flex;
