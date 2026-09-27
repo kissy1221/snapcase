@@ -117,6 +117,24 @@
   text-align: left;
   cursor: pointer;
 }
+.tc-row {
+  position: relative;
+}
+.tc-row .menu {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  opacity: 0;
+}
+.tc-row:hover .menu,
+.tc-row:focus-within .menu,
+.tc-row .menu:has([aria-expanded='true']) {
+  opacity: 1;
+}
+.tc-row:hover .n,
+.tc-row:focus-within .n {
+  visibility: hidden;
+}
 .tc:hover:not(.sel) {
   background: var(--rule);
 }
@@ -447,7 +465,7 @@ pre {
   line-height: 1.65;
   padding: 12px 14px;
   border-radius: 6px;
-  background: var(--paper);
+  background-color: var(--paper);
   box-shadow: inset 0 0 0 1px var(--rule);
   overflow-x: auto;
 }
@@ -563,14 +581,30 @@ th {
 }
 .delete-tc {
   margin-top: 24px;
+  padding: 8px 16px;
   border: 0;
-  background: none;
-  font-size: 12px;
-  color: var(--ink3);
+  border-radius: 6px;
+  background: var(--ng);
+  font-size: 13px;
+  color: #fff;
   cursor: pointer;
 }
 .delete-tc:hover {
-  color: var(--ng);
+  filter: brightness(0.9);
+}
+
+/* ---- select: 矢印だけの素朴な見た目にそろえる ---- */
+select {
+  appearance: none;
+  padding-right: 26px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%238b93a4' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  cursor: pointer;
+}
+select:focus-visible {
+  outline: 2px solid var(--ai);
+  outline-offset: 1px;
 }
 
 /* ---- dialog / form / toast ---- */
@@ -620,6 +654,9 @@ th {
   border-radius: 6px;
   background: var(--paper);
   box-shadow: inset 0 0 0 1px var(--rule);
+}
+.form select {
+  padding-right: 26px;
 }
 .form textarea.mono {
   font-family: var(--mono);
@@ -1510,26 +1547,29 @@ input.line {
 select.res {
   width: 100%;
   height: 32px;
-  padding: 0 6px;
+  padding: 0 26px 0 10px;
   border: 0;
   border-radius: 6px;
   font: inherit;
   font-size: 13px;
   font-weight: 600;
-  background: var(--paper);
+  background-color: var(--paper);
   color: var(--ink2);
   cursor: pointer;
 }
 select.res.ok {
-  background: var(--ok);
+  background-color: var(--ok);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
   color: #fff;
 }
 select.res.ng {
-  background: var(--ng);
+  background-color: var(--ng);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
   color: #fff;
 }
 select.res.hold {
-  background: var(--hold);
+  background-color: var(--hold);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
   color: #fff;
 }
 .add-row {

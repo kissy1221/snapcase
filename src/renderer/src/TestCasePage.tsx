@@ -4,9 +4,8 @@ import { displayNumbers } from '../../shared/ops'
 import type { Block, Manifest, TestCase } from '../../shared/types'
 import { BLOCK_LABEL, TEXT_BLOCKS, type TextBlockType } from './blockMeta'
 import { BlockDialog, BlockView, ImageViewer } from './Blocks'
-import { RESULT_CLASS, undoToast } from './helpers'
+import { RESULT_CLASS, deleteTestCase, undoToast } from './helpers'
 import { Menu, type MenuItem } from './Menu'
-import { OVERVIEW, select } from './store'
 import { AutoLine, AutoText } from './ui'
 
 type ImageBlock = Extract<Block, { type: 'image' }>
@@ -32,13 +31,6 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
       apply({ t: 'addBlock', tcId: tc.id, no: editing.no, block: b })
     else apply({ t: 'updateBlock', tcId: tc.id, no: editing.no, index: editing.index, block: b })
     setEditing(null)
-  }
-
-  /** 削除はすぐ実行し、「元に戻す」を出す(確認ダイアログは出さない)。 */
-  const removeTc = (): void => {
-    select(OVERVIEW)
-    apply({ t: 'deleteTestCase', id: tc.id })
-    undoToast(`${tc.id} を削除しました`)
   }
 
   /** ドラッグ中の種類が合うときだけ、ドロップを受けて位置を強調する。 */
@@ -363,8 +355,8 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
         </div>
       </div>
 
-      <button className="delete-tc" onClick={removeTc}>
-        このテストケースを削除
+      <button className="delete-tc" onClick={() => deleteTestCase(tc.id)}>
+        テストケースを削除
       </button>
 
       {editing && (

@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { nextTcId } from '../../shared/ops'
 import type { Manifest, Result } from '../../shared/types'
-import { getSelection, select, toast } from './store'
+import { OVERVIEW, getSelection, select, toast } from './store'
 
 export const RESULT_CLASS: Record<Result, string> = { OK: 'ok', NG: 'ng', 保留: 'hold', 未実施: '' }
 export const COLOR: Record<Result, string> = {
@@ -68,3 +68,10 @@ export const useCompact = (): boolean =>
 /** 元に戻せる操作の後に出すトースト。 */
 export const undoToast = (msg: string): void =>
   toast({ msg, action: { label: '元に戻す', run: () => void window.api.undo() } })
+
+/** テストケースを削除する。確認は出さず、「元に戻す」を出す。 */
+export function deleteTestCase(id: string): void {
+  select(OVERVIEW)
+  void window.api.apply({ t: 'deleteTestCase', id })
+  undoToast(`${id} を削除しました`)
+}
