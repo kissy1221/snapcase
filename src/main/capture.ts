@@ -29,7 +29,7 @@ function ensureScreenPermission(): void {
   if (systemPreferences.getMediaAccessStatus('screen') === 'granted') return
   shell.openExternal(MAC_SCREEN_SETTINGS)
   throw new CaptureError(
-    '画面収録が許可されていません。開いた設定で「証跡作ったったー」を許可し、アプリを再起動してください。'
+    '画面収録が許可されていません。開いた設定で「Snapcase」を許可し、アプリを再起動してください。'
   )
 }
 

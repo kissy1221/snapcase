@@ -29,11 +29,11 @@ import { loadTestCases } from './import'
 import { listSessions, Session } from './session'
 import { broadcast, sendToast, state, targetTestCase } from './state'
 
-// EVIDENCE_DATA_DIR は自動テスト用。実データを汚さないために保存先を差し替える。
+// SNAPCASE_DATA_DIR は自動テスト用。実データを汚さないために保存先を差し替える。
 const root = (): string =>
-  process.env.EVIDENCE_DATA_DIR ||
+  process.env.SNAPCASE_DATA_DIR ||
   getSettings().dataDir ||
-  join(app.getPath('documents'), '証跡作ったったー')
+  join(app.getPath('documents'), 'Snapcase')
 
 // 画像は evidence://img/<ファイル名> で renderer に渡す(file:// を許可せずに済む)。
 protocol.registerSchemesAsPrivileged([
@@ -62,7 +62,7 @@ let registered = ''
 
 function notify(body: string): void {
   sendToast({ msg: body })
-  if (!state.mainWindow?.isFocused()) new Notification({ title: '証跡作ったったー', body }).show()
+  if (!state.mainWindow?.isFocused()) new Notification({ title: 'Snapcase', body }).show()
 }
 
 /** 撮影の入口(ホットキー)。撮って、編集待ちに入れる。 */
@@ -237,12 +237,12 @@ export async function exportOnClose(): Promise<void> {
   try {
     const files = await exportSession(s, formats)
     new Notification({
-      title: '証跡作ったったー',
+      title: 'Snapcase',
       body: `${files.join('、')} を書き出しました`
     }).show()
   } catch {
     new Notification({
-      title: '証跡作ったったー',
+      title: 'Snapcase',
       body: '書き出しに失敗しました。手動で書き出してください。'
     }).show()
   }

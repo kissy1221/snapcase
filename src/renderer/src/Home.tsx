@@ -51,7 +51,7 @@ export default function Home(): React.JSX.Element {
       <button className="home-gear" onClick={() => setSettings(true)}>
         設定
       </button>
-      <h1>証跡作ったったー</h1>
+      <h1>Snapcase</h1>
       <form
         className="new"
         onSubmit={(e) => {

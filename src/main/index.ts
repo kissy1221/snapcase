@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { exportOnClose, registerIpc, unregisterShortcuts } from './ipc'
+import { migrateLegacy } from './migrate'
 import { state } from './state'
 import icon from '../../resources/icon.png?asset'
 
@@ -52,7 +53,7 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('jp.evidence-shot.app')
+  electronApp.setAppUserModelId('jp.snapcase.app')
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -60,6 +61,14 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
+
+  // 改名前(証跡作ったったー)のセッションと設定を引き継ぐ。自動テスト(SNAPCASE_DATA_DIR 指定時)は実データに触れない。
+  if (!process.env.SNAPCASE_DATA_DIR)
+    migrateLegacy({
+      documents: app.getPath('documents'),
+      appData: app.getPath('appData'),
+      userData: app.getPath('userData')
+    })
 
   registerIpc()
 

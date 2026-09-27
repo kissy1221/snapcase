@@ -20,18 +20,18 @@
 
 | OS | ファイル |
 |---|---|
-| Windows | `evidence-shot-<版>-win-setup.exe`（インストーラ）／ `…-win-portable.exe`（インストール不要） |
-| macOS | `evidence-shot-<版>-mac-arm64.dmg`（Apple Silicon）／ `…-mac-x64.dmg`（Intel） |
-| Linux | `evidence-shot-<版>-linux-x86_64.AppImage`（X11 向け。Wayland では最前面ウィンドウの撮影ができない） |
+| Windows | `snapcase-<版>-win-setup.exe`（インストーラ）／ `…-win-portable.exe`（インストール不要） |
+| macOS | `snapcase-<版>-mac-arm64.dmg`（Apple Silicon）／ `…-mac-x64.dmg`（Intel） |
+| Linux | `snapcase-<版>-linux-x86_64.AppImage`（X11 向け。Wayland では最前面ウィンドウの撮影ができない） |
 
 ## 署名していないことについて
 
 証明書を持っていないため、いまの成果物は署名なし（macOS は ad-hoc 署名）。初回だけ、次の操作が要る。
 
 - **macOS：** 開こうとすると警告が出る。「システム設定 → プライバシーとセキュリティ」の「このまま開く」を押す。
-  「壊れている」と出るときは、ターミナルで `xattr -dr com.apple.quarantine /Applications/証跡作ったったー.app` を実行する。
+  「壊れている」と出るときは、ターミナルで `xattr -dr com.apple.quarantine /Applications/Snapcase.app` を実行する。
 - **Windows：** SmartScreen が出たら「詳細情報 → 実行」を選ぶ。
-- **Linux：** `chmod +x evidence-shot-*.AppImage` してから実行する。
+- **Linux：** `chmod +x snapcase-*.AppImage` してから実行する。
 
 社内などで広く配るなら、署名を付けるのがよい。
 

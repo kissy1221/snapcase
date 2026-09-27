@@ -1,5 +1,5 @@
-appId: jp.evidence-shot.app
-productName: 証跡作ったったー
+appId: jp.snapcase.app
+productName: Snapcase
 directories:
   buildResources: build
 files:
@@ -15,7 +15,7 @@ asarUnpack:
   # get-windows は OS ごとのネイティブ実行ファイルを子プロセスで起動するため、asar の外に置く。
   - node_modules/get-windows/**
 win:
-  executableName: evidence-shot
+  executableName: snapcase
   target:
     - nsis
     - portable

@@ -8,7 +8,7 @@ export interface Settings {
   hotkey: string
   /** 撮影後に編集画面を開く。オフなら注釈・コメント無しでそのまま保存する。 */
   openEditor: boolean
-  /** セッションの保存先。空なら「書類/証跡作ったったー」。 */
+  /** セッションの保存先。空なら「書類/Snapcase」。 */
   dataDir: string
   /** セッションを閉じるとき・アプリを終了するときに書き出す形式 */
   exportOnClose: ExportFormat[]

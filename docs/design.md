@@ -1,4 +1,4 @@
-# 証跡作ったったー リプレイス設計
+# Snapcase 設計（旧「証跡作ったったー」のリプレイス）
 
 旧版 `../evidence-shot`（v0.2.0、Python/tkinter、Windows 専用）を、Electron + React/TS で作り直す。
 機能は同等に引き継ぎ、UI は旧版を踏襲せずに作り直す。
@@ -81,7 +81,7 @@ src/
 
 ### 保存場所
 
-既定は `<書類>/証跡作ったったー/<セッション名>/`。設定で変更できる。
+既定は `<書類>/Snapcase/<セッション名>/`。設定で変更できる。
 中身は旧版と同じ（`manifest.json`、`images/`、`log.html`、`log.md`、`log.pdf`、`log.xlsx`）。
 
 ### OS ごとの注意点

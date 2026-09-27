@@ -1,7 +1,8 @@
 {
-  "name": "evidence-shot",
+  "name": "snapcase",
+  "productName": "Snapcase",
   "version": "0.1.0",
-  "description": "証跡作ったったー: 手動テストのスクリーンショット証跡ツール",
+  "description": "Snapcase: 手動テストのスクリーンショットと結果を、テストケースごとに残すアプリ",
   "main": "./out/main/index.js",
   "author": "",
   "scripts": {

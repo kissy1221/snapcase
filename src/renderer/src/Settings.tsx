@@ -123,7 +123,7 @@ export default function SettingsDialog({ onClose }: { onClose: () => void }): Re
           <div className="field">
             <span className="lbl">保存先（次にセッションを開くときから変わります）</span>
             <span className="inline">
-              <code className="path">{s.dataDir || '書類/証跡作ったったー（既定）'}</code>
+              <code className="path">{s.dataDir || '書類/Snapcase（既定）'}</code>
               <button
                 type="button"
                 className="chip"

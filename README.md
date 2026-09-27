@@ -1,4 +1,4 @@
-# 証跡作ったったー
+# Snapcase
 
 手動テストの記録（スクリーンショット・コード・表・判定）を、テストケースごとに整理して残すデスクトップアプリ。
 書き出しは PDF / Excel / HTML / Markdown。Windows と macOS に対応（Linux はベストエフォート）。
@@ -37,7 +37,7 @@ npm run build:mac  # / build:win / build:linux（配布物は dist/）
 
 配布物のビルドとリリース（GitHub Actions・署名・成果物）は [docs/release.md](docs/release.md)。
 
-保存先は既定で「書類/証跡作ったったー」。自動テストでは環境変数 `EVIDENCE_DATA_DIR` で差し替える。
+保存先は既定で「書類/Snapcase」。自動テストでは環境変数 `SNAPCASE_DATA_DIR` で差し替える。
 
 ```
 src/shared    manifest の型と更新処理(ops)、取り込みの解析。テストの中心
