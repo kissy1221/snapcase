@@ -721,3 +721,22 @@ th {
   text-decoration: underline;
   cursor: pointer;
 }
+
+h1.title.static {
+  margin: 4px 0 6px;
+  padding: 0 4px;
+}
+.summary {
+  padding: 0 4px;
+  margin-bottom: 28px;
+  font-size: 13px;
+  color: var(--ink3);
+}
+.props.flat {
+  border-top: 0;
+  padding-top: 0;
+}
+input.line {
+  width: 100%;
+  padding: 3px 6px;
+}

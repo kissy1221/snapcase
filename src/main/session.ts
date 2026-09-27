@@ -1,8 +1,21 @@
 import { mkdir, readdir, readFile, rename, stat, unlink, writeFile } from 'fs/promises'
+import { platform, release, userInfo } from 'os'
 import { join } from 'path'
 import { apply, emptyManifest, normalize, type Op } from '../shared/ops'
 import type { SessionSummary } from '../shared/api'
-import type { Manifest } from '../shared/types'
+import type { Manifest, Meta } from '../shared/types'
+
+/** 実施情報の既定値(実施者・実施日・OS)。ブラウザ・ビルド・備考は空のまま。 */
+export function defaultMeta(): Meta {
+  const d = new Date()
+  const p = (n: number): string => String(n).padStart(2, '0')
+  const os = { darwin: 'macOS', win32: 'Windows', linux: 'Linux' }[platform()] ?? platform()
+  return {
+    tester: userInfo().username,
+    date: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`,
+    os: `${os} ${release()}`
+  }
+}
 
 export const sanitizeName = (name: string): string => name.replace(/[\\/:*?"<>|]/g, '_').trim()
 
@@ -34,7 +47,7 @@ export class Session {
         throw new Error('manifest.json を読み込めません')
     }
     // 新規は即保存する。保存しないと、最初の操作までホームの一覧に出ない。
-    const s = new Session(dir, emptyManifest(name))
+    const s = new Session(dir, { ...emptyManifest(name), meta: defaultMeta() })
     await s.save()
     return s
   }

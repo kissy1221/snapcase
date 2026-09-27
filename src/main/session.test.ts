@@ -48,6 +48,13 @@ describe('Session', () => {
     expect((await listSessions(root)).map((x) => x.name)).toEqual(['fresh'])
   })
 
+  it('新規作成では実施情報の既定値(実施者・実施日・OS)が入る', async () => {
+    const s = await Session.open(root, 'meta')
+    expect(s.manifest.meta.tester).toBeTruthy()
+    expect(s.manifest.meta.date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    expect(s.manifest.meta.os).toBeTruthy()
+  })
+
   it('空のセッション名は拒否する', async () => {
     await expect(Session.open(root, '  ')).rejects.toThrow()
   })
