@@ -1,47 +1,41 @@
-# Snapcase
+<p align="center">
+  <img src="build/icon.png" width="120" alt="Snapcase icon" />
+</p>
 
-手動テストの記録（スクリーンショット・コード・表・判定）を、テストケースごとに整理して残すデスクトップアプリ。
-書き出しは PDF / Excel / HTML / Markdown。Windows と macOS に対応（Linux はベストエフォート）。
+<h1 align="center">Snapcase</h1>
 
-旧版（Python / tkinter、Windows 専用）の作り直し。既存のセッション（`manifest.json` v3）はそのまま開ける。
-設計と方針は [docs/design.md](docs/design.md)、画面のイメージは [docs/mockup.html](docs/mockup.html)。
+Snapcase は、手動テストの記録（スクリーンショット・コード・表・判定）をテストケースごとに整理して残せるデスクトップアプリです。
+書き出しは PDF / Excel / HTML / Markdown に対応し、Windows・macOS・Linux（ベストエフォート）で使えます。
 
-## 使い方
+## 技術スタック
 
-1. ホームでセッション名を入力して開始（既存の名前なら続きから）。
-2. 「テストケースを追加」するか、CSV / Excel（ファイルのドロップも可）から取り込む。
-3. テストする画面を前面にして **Ctrl+Alt+S**（設定で変更可）。編集画面で注釈とコメントを付けて Enter で保存。
-   マウスだけなら、画面下の撮影ボタンからウィンドウを選ぶ。
-4. 画像は貼り付け（Ctrl/⌘+V）やドロップでも追加できる。コード・表・期待と実際・メモ・バナー・参照リンクも、ステップに載せられる。
-5. ステップの並べ替えや削除は、各ステップ・各ブロックの「⋯」メニューから。番号やつかみ（⋮⋮）のドラッグでも動かせる。
-   ブロックは、クリックで編集（画像は拡大）。削除しても、トーストの「元に戻す」か ⌘Z / Ctrl+Z で戻せる（⇧⌘Z でやり直し）。
-6. 左の「一覧」で、実施率・合格率・フォルダ別の件数と、全テストケースの表が見られる。表のセルは、その場で編集できる（判定・前提条件・手順など）。
-7. 「書き出す」で PDF などを作る。⌘K / Ctrl+K で、すべての操作をキーボードから呼べる。
+| 分類 | 技術 |
+| --- | --- |
+| デスクトップ基盤 | Electron |
+| 開発/ビルド | electron-vite, Vite |
+| UI | React, TypeScript |
+| テスト | Vitest |
+| Lint / Format | ESLint, Prettier |
+| パッケージング | electron-builder |
+| Excel 書き出し | exceljs |
+| コードハイライト | highlight.js |
+| ウィンドウ一覧取得 | get-windows |
 
-ウィンドウを細くするとコンパクト表示になり、「手前に固定」してテストしながら使える。
+## インストール
 
-### macOS の許可
+[Releases](https://github.com/kissy1221/snapcase/releases) から OS に合ったファイルをダウンロードする。
 
-初回の撮影で「画面収録」の許可が必要。開いた設定で本アプリを許可し、アプリを再起動する。
+- **Windows**: `snapcase-<版>-win-setup.exe` を実行（インストール不要なら `-win-portable.exe`）。SmartScreen が出たら「詳細情報 → 実行」を選ぶ。
+- **macOS**: `snapcase-<版>-mac-arm64.dmg`（Apple Silicon）または `-mac-x64.dmg`（Intel）を開いてインストール。署名なしのため、初回は「システム設定 → プライバシーとセキュリティ」の「このまま開く」が必要。
+- **Linux**: `snapcase-<版>-linux-x86_64.AppImage` をダウンロードし、`chmod +x` してから実行。
 
-## 開発
+初回の撮影時、macOS では「画面収録」の許可が必要（設定で許可したあとアプリを再起動する）。
+
+## ビルド方法
 
 ```
 npm install
-npm run dev        # 開発起動
-npm test           # vitest
-npm run typecheck
-npm run lint
-npm run build:mac  # / build:win / build:linux（配布物は dist/）
+npm run build:mac    # / build:win / build:linux（成果物は dist/）
 ```
 
-配布物のビルドとリリース（GitHub Actions・署名・成果物）は [docs/release.md](docs/release.md)。
-
-保存先は既定で「書類/Snapcase」。自動テストでは環境変数 `SNAPCASE_DATA_DIR` で差し替える。
-
-```
-src/shared    manifest の型と更新処理(ops)、取り込みの解析。テストの中心
-src/main      セッションの読み書き、撮影、編集画面の待ち行列、書き出し(export/)、IPC
-src/preload   contextBridge で公開する window.api
-src/renderer  React の画面(ホーム・ワークスペース・編集画面・コンパクト)
-```
+開発中に起動するだけなら `npm run dev`。詳しいリリース手順は [docs/release.md](docs/release.md) を参照。
