@@ -1,0 +1,220 @@
+/* 編集画面は画像が主役なので、常に暗い配色にする。 */
+.ed {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  background: #1e2127;
+  color: #e7e9ee;
+}
+.ed-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  padding-left: 84px;
+  background: #262a32;
+  border-bottom: 1px solid #343944;
+  -webkit-app-region: drag;
+}
+[data-platform='win'] .ed-top,
+[data-platform='linux'] .ed-top {
+  padding-left: 14px;
+}
+.ed-top > * {
+  -webkit-app-region: no-drag;
+}
+.dest {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #8b93a4;
+}
+.dest select {
+  max-width: 260px;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: #30353f;
+  color: #e7e9ee;
+  font: inherit;
+  font-size: 13px;
+}
+.ed .tools {
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 8px;
+  background: #30353f;
+  opacity: 1;
+}
+.ed .tools button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: #b8bfcc;
+  font-size: 13px;
+  cursor: pointer;
+}
+.ed .tools button b {
+  font-weight: 500;
+  font-size: 11px;
+  color: #7c8494;
+}
+.ed .tools button.on {
+  background: #474e5c;
+  color: #fff;
+}
+.ed .tools button:hover:not(:disabled):not(.on) {
+  background: #3a404c;
+}
+.ed .tools button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.ed .tools .sep {
+  width: 1px;
+  height: 18px;
+  margin: 0 6px;
+  background: #454b57;
+}
+.ed .tools .sw {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0 4px;
+  border-radius: 50%;
+}
+.ed .tools .sw.on {
+  background-clip: padding-box;
+  box-shadow:
+    0 0 0 2px #30353f,
+    0 0 0 4px #fff;
+}
+.ed-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ed-actions .rest {
+  font-size: 12px;
+  color: #8b93a4;
+}
+.ed-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: #d4d8e0;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.ed-actions button.primary {
+  background: #4a5fd6;
+  color: #fff;
+}
+.ed-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.ed kbd {
+  font: inherit;
+  font-size: 11px;
+  line-height: 18px;
+  min-width: 18px;
+  padding: 0 4px;
+  text-align: center;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.canvas {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 40px 24px 16px;
+  overflow: hidden;
+}
+.tip {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #8b93a4;
+  white-space: nowrap;
+}
+.stage {
+  position: relative;
+  display: grid;
+  max-width: 100%;
+  max-height: 100%;
+  min-height: 0;
+}
+.stage canvas {
+  max-width: 100%;
+  max-height: 100%;
+  cursor: crosshair;
+  box-shadow:
+    0 0 0 1px #3a3f4b,
+    0 20px 50px rgba(0, 0, 0, 0.4);
+  touch-action: none;
+}
+.stage canvas.text-cursor {
+  cursor: text;
+}
+.overlay {
+  position: absolute;
+  min-width: 8em;
+  padding: 2px 4px;
+  border: 1px dashed currentColor;
+  background: #fff;
+  font-family: inherit;
+  font-weight: 600;
+  resize: none;
+  outline: none;
+}
+
+.ed-bottom {
+  padding: 12px 24px 14px;
+  background: #262a32;
+  border-top: 1px solid #343944;
+}
+.comment {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #1b1e24;
+  box-shadow: inset 0 0 0 1px #3a3f4b;
+  color: #e7e9ee;
+  font: inherit;
+}
+.comment:focus-visible {
+  outline: 2px solid #7f8cff;
+  outline-offset: 0;
+}
+.src {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #8b93a4;
+  word-break: break-all;
+}

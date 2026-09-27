@@ -1,0 +1,46 @@
+appId: jp.evidence-shot.app
+productName: 証跡作ったったー
+directories:
+  buildResources: build
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!docs/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+asarUnpack:
+  - resources/**
+  # get-windows は OS ごとのネイティブ実行ファイルを子プロセスで起動するため、asar の外に置く。
+  - node_modules/get-windows/**
+win:
+  executableName: evidence-shot
+  target:
+    - nsis
+    - portable
+nsis:
+  artifactName: ${name}-${version}-setup.${ext}
+  shortcutName: ${productName}
+  uninstallDisplayName: ${productName}
+  createDesktopShortcut: always
+portable:
+  artifactName: ${name}-${version}-portable.${ext}
+mac:
+  category: public.app-category.developer-tools
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    NSScreenCaptureUsageDescription: テスト対象のウィンドウを撮影して証跡にするために使います。
+    NSDocumentsFolderUsageDescription: 証跡の保存先として書類フォルダを使います。
+  notarize: false
+dmg:
+  artifactName: ${name}-${version}.${ext}
+linux:
+  target:
+    - AppImage
+    - deb
+  maintainer: evidence-shot
+  category: Utility
+appImage:
+  artifactName: ${name}-${version}.${ext}
+npmRebuild: false
