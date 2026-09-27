@@ -12,6 +12,8 @@ export type Op =
   | { t: 'moveTestCase'; id: string; toGroup: string; beforeId: string | null }
   | { t: 'moveTestCaseBy'; id: string; delta: -1 | 1 }
   | { t: 'moveGroup'; name: string; delta: -1 | 1 }
+  /** フォルダを beforeName の直前へ(null は末尾)。ドラッグ＆ドロップ用。 */
+  | { t: 'moveGroupTo'; name: string; beforeName: string | null }
   | { t: 'addEntry'; tcId: string; blocks: Block[]; comment?: string; time?: string }
   | { t: 'setEntryComment'; tcId: string; no: number; comment: string }
   | { t: 'deleteEntry'; tcId: string; no: number }
@@ -51,8 +53,10 @@ export function newTestCase(m: Manifest, p: Partial<Omit<TestCase, 'entries'>> =
   }
 }
 
+/** TC-nnn の最大番号+1。削除があっても既存の ID と重ならない。 */
 export function nextTcId(m: Manifest): string {
-  return 'TC-' + String(m.testcases.length + 1).padStart(3, '0')
+  const max = Math.max(0, ...m.testcases.map((t) => Number(/^TC-(\d+)$/.exec(t.id)?.[1] ?? 0)))
+  return 'TC-' + String(max + 1).padStart(3, '0')
 }
 
 /** 削除しても衝突しない、再利用しない記録番号。 */
@@ -81,6 +85,14 @@ export function orderedGroups(m: Manifest): { name: string; indexes: number[] }[
     if (g) g.indexes.push(i)
     else out.push({ name, indexes: [i] })
   })
+  return out
+}
+
+/** 記録の no → 表示・出力の通し番号(フォルダ順・テストケース順・記録順で 1 から)。欠番は出ない。 */
+export function displayNumbers(m: Manifest): Map<number, number> {
+  const out = new Map<number, number>()
+  for (const g of orderedGroups(m))
+    for (const i of g.indexes) for (const e of m.testcases[i].entries) out.set(e.no, out.size + 1)
   return out
 }
 
@@ -175,11 +187,19 @@ export function apply(src: Manifest, op: Op): Applied {
       if (j !== undefined) swap(m.testcases, i, j)
       break
     }
-    case 'moveGroup': {
+    case 'moveGroup':
+    case 'moveGroupTo': {
       const groups = orderedGroups(m).map((g) => g.name)
       const i = groups.indexOf(op.name)
-      if (i < 0 || i + op.delta < 0 || i + op.delta >= groups.length) break
-      swap(groups, i, i + op.delta)
+      if (i < 0) break
+      groups.splice(i, 1)
+      if (op.t === 'moveGroup') {
+        if (i + op.delta < 0 || i + op.delta > groups.length) break
+        groups.splice(i + op.delta, 0, op.name)
+      } else {
+        const at = op.beforeName === null ? -1 : groups.indexOf(op.beforeName)
+        groups.splice(at < 0 ? groups.length : at, 0, op.name)
+      }
       const buckets = new Map<string, TestCase[]>()
       for (const tc of m.testcases) {
         const k = groupOf(tc) || GROUP_NONE

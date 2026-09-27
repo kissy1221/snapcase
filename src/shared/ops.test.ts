@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { GROUP_NONE } from './constants'
-import { apply, emptyManifest, nextImageName, nextNo, normalize, orderedGroups, type Op } from './ops'
+import { apply, displayNumbers, emptyManifest, nextImageName, nextNo, nextTcId, normalize, orderedGroups, type Op } from './ops'
 import type { Block, Manifest } from './types'
 
 const img = (name: string): Block => ({ type: 'image', image: name, title: '', url: '' })
@@ -99,5 +99,28 @@ describe('記録とブロック', () => {
     const before = JSON.stringify(m)
     apply(m, { t: 'deleteTestCase', id: 'A' })
     expect(JSON.stringify(m)).toBe(before)
+  })
+})
+
+describe('採番と通し番号', () => {
+  it('nextTcId は削除しても既存の ID と重ならない', () => {
+    let m = run(emptyManifest('s'), { t: 'addTestCase', tc: {} }, { t: 'addTestCase', tc: {} }, { t: 'addTestCase', tc: {} })
+    m = run(m, { t: 'deleteTestCase', id: 'TC-002' })
+    expect(nextTcId(m)).toBe('TC-004')
+  })
+  it('displayNumbers はフォルダ順・テストケース順で欠番なく振る', () => {
+    const m = run(
+      base(),
+      { t: 'addEntry', tcId: 'B', blocks: [img('0001.png')] }, // no1 (g2)
+      { t: 'addEntry', tcId: 'A', blocks: [img('0002.png')] }, // no2 (g1)
+      { t: 'addEntry', tcId: 'D', blocks: [img('0003.png')] } // no3 (未分類)
+    )
+    expect([...displayNumbers(m)]).toEqual([[2, 1], [1, 2], [3, 3]]) // g1 → g2 → 未分類の順
+  })
+  it('moveGroupTo でフォルダを指定位置・末尾へ移せる', () => {
+    let m = run(base(), { t: 'moveGroupTo', name: GROUP_NONE, beforeName: 'g1' })
+    expect(ids(m)).toEqual(['D', 'A', 'C', 'B'])
+    m = run(m, { t: 'moveGroupTo', name: 'g1', beforeName: null })
+    expect(ids(m)).toEqual(['D', 'B', 'A', 'C'])
   })
 })
