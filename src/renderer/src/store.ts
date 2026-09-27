@@ -27,7 +27,7 @@ export const getManifest = manifestStore.get
 
 /** 選択中のテストケースの id。OVERVIEW は概要ページ。 */
 export const OVERVIEW = '@overview'
-/** 一覧表(サマリと、セルを直接編集できる表)。 */
+/** 一覧(サマリと、セルを直接編集できる表)。 */
 export const TABLE = '@table'
 /** ページを表す特別な値(テストケースの id ではない)。 */
 export const isPage = (v: string): boolean => v === OVERVIEW || v === TABLE

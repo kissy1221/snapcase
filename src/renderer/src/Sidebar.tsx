@@ -57,10 +57,10 @@ export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
   return (
     <aside className="sidebar">
       <button className={'nav' + (sel === OVERVIEW ? ' sel' : '')} onClick={() => select(OVERVIEW)}>
-        概要と実施情報
+        概要
       </button>
       <button className={'nav' + (sel === TABLE ? ' sel' : '')} onClick={() => select(TABLE)}>
-        一覧表
+        一覧
       </button>
 
       <nav className="tree" aria-label="テストケース">
