@@ -3,7 +3,7 @@ import { GROUP_NONE, RESULTS } from '../../shared/constants'
 import { orderedGroups } from '../../shared/ops'
 import type { Manifest } from '../../shared/types'
 import { COLOR, RESULT_CLASS, addTestCase, importTestCases } from './helpers'
-import { OVERVIEW, select, useSelection } from './store'
+import { OVERVIEW, TABLE, select, useSelection } from './store'
 
 export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
   const sel = useSelection()
@@ -22,6 +22,9 @@ export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
     <aside className="sidebar">
       <button className={'nav' + (sel === OVERVIEW ? ' sel' : '')} onClick={() => select(OVERVIEW)}>
         概要と実施情報
+      </button>
+      <button className={'nav' + (sel === TABLE ? ' sel' : '')} onClick={() => select(TABLE)}>
+        一覧表
       </button>
 
       <nav className="tree" aria-label="テストケース">

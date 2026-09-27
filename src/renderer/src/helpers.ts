@@ -12,10 +12,10 @@ export const COLOR: Record<Result, string> = {
 }
 
 /** 追加が manifest に反映されてから選択する(先に選ぶと「存在しない」と見なされ概要に戻る)。 */
-export async function addTestCase(m: Manifest, group = ''): Promise<void> {
+export async function addTestCase(m: Manifest, group = '', open = true): Promise<void> {
   const id = nextTcId(m)
   await window.api.apply({ t: 'addTestCase', tc: { id, title: '新しいテストケース', group } })
-  select(id)
+  if (open) select(id)
 }
 
 export const HOTKEY_LABEL = /Mac/.test(navigator.platform) ? ['⌃', '⌥', 'S'] : ['Ctrl', 'Alt', 'S']
