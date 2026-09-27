@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { dismissToast, useToast } from './store'
+import { dismissToast, useConfirm, useToast } from './store'
 
 /** ネイティブ <dialog>。Esc で閉じ、フォーカスは中に閉じ込められる。 */
 export function Dialog({
@@ -115,5 +115,24 @@ export function Toaster(): React.JSX.Element | null {
         </button>
       )}
     </div>
+  )
+}
+
+/** 確認ダイアログの表示場所(アプリに1つ)。最初にフォーカスが当たるのは「キャンセル」側。 */
+export function ConfirmHost(): React.JSX.Element | null {
+  const c = useConfirm()
+  if (!c) return null
+  return (
+    <Dialog title={c.title} onClose={() => c.resolve(false)}>
+      <p className="confirm-msg">{c.message}</p>
+      <div className="actions">
+        <button type="button" onClick={() => c.resolve(false)}>
+          キャンセル
+        </button>
+        <button type="button" className="danger" onClick={() => c.resolve(true)}>
+          {c.okLabel}
+        </button>
+      </div>
+    </Dialog>
   )
 }

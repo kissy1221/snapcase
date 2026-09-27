@@ -62,3 +62,25 @@ window.api.onToast((t) =>
       : undefined
   })
 )
+
+export interface ConfirmRequest {
+  title: string
+  message: string
+  okLabel: string
+  resolve: (ok: boolean) => void
+}
+const confirmStore = createStore<ConfirmRequest | null>(null)
+export const useConfirm = confirmStore.use
+
+/** 確認ダイアログを出し、実行してよければ true を返す(キャンセル・Esc は false)。 */
+export function confirmAsk(opts: Omit<ConfirmRequest, 'resolve'>): Promise<boolean> {
+  return new Promise((resolve) =>
+    confirmStore.set({
+      ...opts,
+      resolve: (ok) => {
+        confirmStore.set(null)
+        resolve(ok)
+      }
+    })
+  )
+}

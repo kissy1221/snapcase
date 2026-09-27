@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { nextTcId } from '../../shared/ops'
 import type { Manifest, Result, TestCase } from '../../shared/types'
-import { OVERVIEW, getSelection, select, toast } from './store'
+import { OVERVIEW, confirmAsk, getManifest, getSelection, select, toast } from './store'
 
 export const RESULT_CLASS: Record<Result, string> = { OK: 'ok', NG: 'ng', 保留: 'hold', 未実施: '' }
 export const COLOR: Record<Result, string> = {
@@ -69,8 +69,16 @@ export const useCompact = (): boolean =>
 export const undoToast = (msg: string): void =>
   toast({ msg, action: { label: '元に戻す', run: () => void window.api.undo() } })
 
-/** テストケースを削除する。確認は出さず、「元に戻す」を出す。 */
-export function deleteTestCase(id: string): void {
+/** テストケースを削除する。確認ダイアログで了承されたときだけ実行し、あとから「元に戻す」も出す。 */
+export async function deleteTestCase(id: string): Promise<void> {
+  const tc = getManifest()?.testcases.find((t) => t.id === id)
+  const n = tc?.entries.length ?? 0
+  const ok = await confirmAsk({
+    title: `${id} を削除しますか？`,
+    message: `「${tc?.title ?? id}」${n ? `と、その${n}件のステップ` : ''}を削除します。削除したあとも、⌘Z（Ctrl+Z）か「元に戻す」で戻せます。`,
+    okLabel: '削除する'
+  })
+  if (!ok) return
   select(OVERVIEW)
   void window.api.apply({ t: 'deleteTestCase', id })
   undoToast(`${id} を削除しました`)
