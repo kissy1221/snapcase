@@ -20,27 +20,29 @@ win:
     - nsis
     - portable
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
+  artifactName: ${name}-${version}-win-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
 portable:
-  artifactName: ${name}-${version}-portable.${ext}
+  artifactName: ${name}-${version}-win-portable.${ext}
 mac:
   category: public.app-category.developer-tools
+  entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     NSScreenCaptureUsageDescription: テスト対象のウィンドウを撮影して証跡にするために使います。
     NSDocumentsFolderUsageDescription: 証跡の保存先として書類フォルダを使います。
   notarize: false
+  target:
+    - dmg
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  # Intel と Apple Silicon を同じ名前にしない。
+  artifactName: ${name}-${version}-mac-${arch}.${ext}
 linux:
   target:
     - AppImage
-    - deb
-  maintainer: evidence-shot
   category: Utility
 appImage:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${name}-${version}-linux-${arch}.${ext}
 npmRebuild: false
