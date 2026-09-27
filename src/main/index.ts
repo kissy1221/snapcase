@@ -1,8 +1,9 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, nativeTheme, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { exportOnClose, registerIpc, unregisterShortcuts } from './ipc'
 import { migrateLegacy } from './migrate'
+import { getSettings } from './settings'
 import { state } from './state'
 import icon from '../../resources/icon.png?asset'
 
@@ -17,6 +18,10 @@ function createWindow(): void {
     autoHideMenuBar: true,
     // 独自のタイトルバー(renderer 側の .titlebar)を使う。Windows は操作ボタンだけ重ねる。
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'hidden',
+    // mac はタイトルバー/サイドバーを NSVisualEffectView の半透明にする(度合い 0 なら無効。renderer 側は rgba 背景で透過させる)。
+    ...(process.platform === 'darwin' && getSettings().glass > 0
+      ? { vibrancy: 'sidebar', visualEffectState: 'active' }
+      : {}),
     ...(process.platform === 'win32'
       ? { titleBarOverlay: { color: '#f3f4f6', symbolColor: '#1c2230', height: 44 } }
       : {}),
@@ -69,6 +74,8 @@ app.whenReady().then(() => {
       appData: app.getPath('appData'),
       userData: app.getPath('userData')
     })
+
+  nativeTheme.themeSource = getSettings().theme
 
   registerIpc()
 

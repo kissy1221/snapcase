@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import type { ExportFormat, Settings } from '../../shared/api'
+import type { ExportFormat, Settings, Theme } from '../../shared/api'
+import { applyGlass } from './helpers'
 import { Dialog } from './ui'
 
 const MAC = /Mac/.test(navigator.platform)
@@ -45,6 +46,12 @@ const FORMATS: { id: ExportFormat; label: string }[] = [
   { id: 'md', label: 'Markdown' }
 ]
 
+const THEMES: { id: Theme; label: string }[] = [
+  { id: 'system', label: 'システム' },
+  { id: 'light', label: 'ライト' },
+  { id: 'dark', label: 'ダーク' }
+]
+
 export default function SettingsDialog({ onClose }: { onClose: () => void }): React.JSX.Element {
   const [s, setS] = useState<Settings | null>(null)
   const [error, setError] = useState('')
@@ -85,6 +92,42 @@ export default function SettingsDialog({ onClose }: { onClose: () => void }): Re
             />
           </label>
           {error && <p className="error">{error}</p>}
+          <div className="field">
+            <span className="lbl">テーマ</span>
+            <div className="theme-picker" role="radiogroup" aria-label="テーマ">
+              {THEMES.map((t) => (
+                <label key={t.id} className={`theme-opt${s.theme === t.id ? ' sel' : ''}`}>
+                  <input
+                    type="radio"
+                    name="theme"
+                    value={t.id}
+                    checked={s.theme === t.id}
+                    onChange={() => update({ theme: t.id })}
+                  />
+                  <span className={`swatch ${t.id}`} aria-hidden="true" />
+                  {t.label}
+                </label>
+              ))}
+            </div>
+          </div>
+          <label>
+            ウィンドウの鏡面（すりガラス）の度合い
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={s.glass}
+              onChange={(e) => {
+                // ドラッグ中は見た目だけ即座に反映し、保存(IPC)はドラッグを離すまで送らない。
+                // 毎ティック送ると、応答が前後して値がガタつくため。
+                const glass = Number(e.currentTarget.value)
+                applyGlass(glass)
+                setS({ ...s, glass })
+              }}
+              onMouseUp={(e) => update({ glass: Number(e.currentTarget.value) })}
+              onKeyUp={(e) => update({ glass: Number(e.currentTarget.value) })}
+            />
+          </label>
           <label className="check">
             <input
               type="checkbox"

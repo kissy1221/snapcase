@@ -4,6 +4,7 @@ import {
   dialog,
   globalShortcut,
   ipcMain,
+  nativeTheme,
   net,
   Notification,
   protocol,
@@ -132,7 +133,19 @@ export function registerIpc(): void {
   ipcMain.handle('settings:set', (_e, patch: Partial<Settings>) => {
     if (patch.hotkey && patch.hotkey !== registered && !registerHotkey(patch.hotkey))
       return { error: `${patch.hotkey} は他のアプリが使っているため登録できませんでした。` }
-    return { settings: saveSettings(patch) }
+    const before = getSettings()
+    const settings = saveSettings(patch)
+    if (patch.theme) nativeTheme.themeSource = patch.theme
+    // 度合いのスライダーは動かすたびに呼ばれるので、0⇔それ以外をまたいだとき(鏡面の有無自体が変わるとき)
+    // だけ切り替える。setVibrancy(null) → 即再設定は稀に描画プロセスを落とすことがあったため、
+    // 実際に有無が変わるとき以外は触らない。
+    if (
+      process.platform === 'darwin' &&
+      patch.glass !== undefined &&
+      before.glass > 0 !== settings.glass > 0
+    )
+      state.mainWindow?.setVibrancy(settings.glass > 0 ? 'sidebar' : null)
+    return { settings }
   })
   ipcMain.handle('settings:dataDir', async () => {
     const r = await dialog.showOpenDialog(state.mainWindow ?? BrowserWindow.getAllWindows()[0], {

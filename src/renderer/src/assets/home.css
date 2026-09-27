@@ -82,6 +82,9 @@
   box-shadow: 0 0 0 1px var(--rule);
   cursor: pointer;
 }
+[data-platform='mac'] .sessions button {
+  background: var(--surface-glass-content);
+}
 .sessions button:hover {
   box-shadow: 0 0 0 1px var(--ai);
 }

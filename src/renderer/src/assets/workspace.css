@@ -20,6 +20,7 @@
 }
 [data-platform='mac'] .titlebar {
   padding-left: 84px;
+  background: var(--paper-glass);
 }
 [data-platform='win'] .titlebar {
   padding-right: 150px;
@@ -46,6 +47,9 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+[data-platform='mac'] .sidebar {
+  background: var(--paper-glass);
 }
 .nav {
   display: flex;
@@ -220,6 +224,10 @@
   position: relative;
   overflow-y: auto;
   background: var(--surface);
+}
+[data-platform='mac'] .main {
+  /* 本文(証跡・記載)を載せる面なので、透けすぎない --content-glass-alpha を使う。 */
+  background: var(--surface-glass-content);
 }
 .page {
   max-width: 780px;
@@ -445,6 +453,9 @@ textarea.auto {
   border-top: 1px solid var(--rule);
   word-break: break-all;
 }
+[data-platform='mac'] .shot figcaption {
+  background: var(--paper-glass-content);
+}
 .blabel {
   display: flex;
   gap: 8px;
@@ -615,6 +626,7 @@ select:focus-visible {
   padding: 20px 24px;
   border: 0;
   border-radius: 10px;
+  /* ::backdrop の暗い幕を鏡面が拾って濁るため、ダイアログ本体は不透明のままにする(フォームの可読性優先)。 */
   background: var(--surface);
   color: var(--ink);
   box-shadow:
@@ -643,7 +655,7 @@ select:focus-visible {
   align-items: center;
   gap: 8px;
 }
-.form input:not([type='checkbox']),
+.form input:not([type='checkbox']):not([type='range']):not([type='radio']),
 .form select,
 .form textarea {
   font: inherit;
@@ -657,6 +669,54 @@ select:focus-visible {
 }
 .form select {
   padding-right: 26px;
+}
+.form input[type='range'] {
+  width: 100%;
+}
+
+/* ---- テーマ: スウォッチ付きのラジオボタン ---- */
+.theme-picker {
+  display: flex;
+  gap: 10px;
+}
+.theme-picker .theme-opt {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.theme-opt input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.swatch {
+  width: 60px;
+  height: 38px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+.swatch.light {
+  background: linear-gradient(135deg, #ffffff 55%, #f3f4f6 55%);
+}
+.swatch.dark {
+  background: linear-gradient(135deg, #3a3f4a 55%, #1e2127 55%);
+}
+.swatch.system {
+  background: linear-gradient(135deg, #ffffff 50%, #1e2127 50%);
+}
+.theme-opt.sel .swatch {
+  box-shadow: 0 0 0 2px var(--ai);
+}
+.theme-opt input:focus-visible ~ .swatch {
+  outline: 2px solid var(--ai);
+  outline-offset: 2px;
 }
 .form textarea.mono {
   font-family: var(--mono);
@@ -900,6 +960,13 @@ input.line {
 }
 [data-platform='win'] .home-gear {
   right: 160px;
+}
+/* mac のガラス地(タイトルバー/ホーム画面)に乗るボタン・検索欄は、単色の板が浮かないよう半透明にそろえる。 */
+[data-platform='mac'] .export,
+[data-platform='mac'] .search,
+[data-platform='mac'] .home-gear {
+  background: var(--surface-glass);
+  backdrop-filter: blur(var(--panel-blur)) saturate(1.4);
 }
 
 /* コマンドパレット */
@@ -1211,7 +1278,8 @@ input.line {
   overflow-y: auto;
   padding: 4px;
   border-radius: 8px;
-  background: var(--surface);
+  background: var(--surface-glass);
+  backdrop-filter: blur(var(--panel-blur)) saturate(1.4);
   box-shadow:
     0 0 0 1px var(--rule),
     0 12px 32px rgba(20, 24, 34, 0.18);

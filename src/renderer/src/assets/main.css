@@ -27,6 +27,49 @@
   }
 }
 
+/* 鏡面(ガラス)の度合い。JS(main.tsx / Settings.tsx)は --glass-degree(0-1)だけを書き換え、
+   実際の不透明度はここの calc() が持つ。ライト/ダークで上限(*-min)を変えられるようにするため。
+   ライトモードは地の内容(本文)が透けると視認性が落ちるので、控えめな範囲にとどめている。 */
+:root {
+  --glass-degree: 0.55;
+  --paper-rgb: 243, 244, 246;
+  --surface-rgb: 255, 255, 255;
+
+  /* タイトルバー/サイドバーなど、短いラベルだけの chrome */
+  --glass-alpha-min: 0.55;
+  /* 本文(証跡・記載)を載せる面。読みやすさを最優先に、透けすぎない下限にする */
+  --content-alpha-min: 0.86;
+  /* ドロップダウンメニューなど、実DOMの上に浮くパネル */
+  --panel-alpha-min: 0.55;
+  --panel-blur-max: 28px;
+
+  --glass-alpha: calc(1 - var(--glass-degree) * (1 - var(--glass-alpha-min)));
+  --content-glass-alpha: calc(1 - var(--glass-degree) * (1 - var(--content-alpha-min)));
+  --panel-glass-alpha: calc(0.97 - var(--glass-degree) * (0.97 - var(--panel-alpha-min)));
+  --panel-blur: calc(var(--glass-degree) * var(--panel-blur-max));
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper-rgb: 30, 33, 39;
+    --surface-rgb: 38, 42, 50;
+    /* ダークモードは地の内容が透けても読みやすいので、より鏡面感を強められる */
+    --glass-alpha-min: 0.12;
+    --content-alpha-min: 0.45;
+    --panel-alpha-min: 0.35;
+  }
+}
+/* mac は NSVisualEffectView(vibrancy)を窓の地として使うので、鏡面にしたい面だけ半透明にする。 */
+[data-platform='mac'] {
+  --paper-glass: rgba(var(--paper-rgb), var(--glass-alpha));
+  --surface-glass: rgba(var(--surface-rgb), var(--panel-glass-alpha));
+  --paper-glass-content: rgba(var(--paper-rgb), var(--content-glass-alpha));
+  --surface-glass-content: rgba(var(--surface-rgb), var(--content-glass-alpha));
+}
+/* 度合い 0 のときは --glass-alpha が 1 になり、通常の不透明な --paper と同じ色になる。 */
+[data-platform='mac'] body {
+  background: var(--paper-glass);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

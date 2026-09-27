@@ -3,6 +3,13 @@ import { nextTcId } from '../../shared/ops'
 import type { Manifest, Result, TestCase } from '../../shared/types'
 import { OVERVIEW, confirmAsk, getManifest, getSelection, select, toast } from './store'
 
+/** 設定の「鏡面の度合い」(0-100) を CSS 変数に反映する。0 で完全に不透明(鏡面オフ)。
+ * 実際の不透明度・ブラーは main.css 側の calc() が持つ(ライト/ダークで上限を変えるため)。 */
+export function applyGlass(degree: number): void {
+  const d = Math.min(100, Math.max(0, degree)) / 100
+  document.documentElement.style.setProperty('--glass-degree', String(d))
+}
+
 export const RESULT_CLASS: Record<Result, string> = { OK: 'ok', NG: 'ng', 保留: 'hold', 未実施: '' }
 export const COLOR: Record<Result, string> = {
   OK: 'var(--ok)',

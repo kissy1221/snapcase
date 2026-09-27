@@ -2,6 +2,7 @@ import type { Op } from './ops'
 import type { Manifest, Result } from './types'
 
 export type ExportFormat = 'html' | 'md' | 'pdf' | 'xlsx'
+export type Theme = 'system' | 'light' | 'dark'
 
 export interface Settings {
   /** 撮影のグローバルホットキー(Electron の accelerator 形式) */
@@ -12,13 +13,19 @@ export interface Settings {
   dataDir: string
   /** セッションを閉じるとき・アプリを終了するときに書き出す形式 */
   exportOnClose: ExportFormat[]
+  /** 外観のテーマ。system は OS の設定に従う。 */
+  theme: Theme
+  /** ウィンドウの鏡面(すりガラス)の度合い。0 で無効、100 で最も透ける。 */
+  glass: number
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   hotkey: 'Control+Alt+S',
   openEditor: true,
   dataDir: '',
-  exportOnClose: []
+  exportOnClose: [],
+  theme: 'system',
+  glass: 55
 }
 
 export interface SessionSummary {
