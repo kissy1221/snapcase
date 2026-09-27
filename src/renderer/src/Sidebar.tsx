@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { GROUP_NONE, RESULTS } from '../../shared/constants'
 import { orderedGroups } from '../../shared/ops'
 import type { Manifest } from '../../shared/types'
-import { COLOR, RESULT_CLASS, addTestCase, importTestCases } from './helpers'
+import { COLOR, RESULT_CLASS, addTestCase, deleteTestCase, importTestCases } from './helpers'
+import { Menu } from './Menu'
 import { OVERVIEW, TABLE, select, useSelection } from './store'
 
 export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
@@ -63,52 +64,74 @@ export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
                 </span>
               </div>
               {tcs.map((tc) => (
-                <button
+                <div
                   key={tc.id}
-                  className={'tc' + (sel === tc.id ? ' sel' : '') + (over === tc.id ? ' drop' : '')}
-                  draggable
-                  onClick={() => select(tc.id)}
-                  onKeyDown={(e) =>
-                    altMove(e, (delta) =>
-                      window.api.apply({ t: 'moveTestCaseBy', id: tc.id, delta })
-                    )
-                  }
-                  onDragStart={(e) => e.dataTransfer.setData('text/tc', tc.id)}
-                  onDragOver={(e) => {
+                  className="tc-row"
+                  onContextMenu={(e) => {
                     e.preventDefault()
-                    setOver(tc.id)
-                  }}
-                  onDragLeave={() => setOver(null)}
-                  onDrop={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setOver(null)
-                    const entry = Number(e.dataTransfer.getData('text/entry'))
-                    if (entry) {
-                      // ステップを、このテストケースの末尾へ移す。
-                      window.api.apply({
-                        t: 'moveEntryTo',
-                        no: entry,
-                        toTcId: tc.id,
-                        beforeNo: null
-                      })
-                      return
-                    }
-                    const id = e.dataTransfer.getData('text/tc')
-                    if (id && id !== tc.id)
-                      window.api.apply({
-                        t: 'moveTestCase',
-                        id,
-                        toGroup: name === GROUP_NONE ? '' : name,
-                        beforeId: tc.id
-                      })
+                    e.currentTarget.querySelector<HTMLButtonElement>('.menu-btn')?.click()
                   }}
                 >
-                  <span className={'dot ' + RESULT_CLASS[tc.result]} title={tc.result} />
-                  <span className="id num">{tc.id}</span>
-                  <span className="t">{tc.title}</span>
-                  <span className="n num">{tc.entries.length || ''}</span>
-                </button>
+                  <button
+                    className={
+                      'tc' + (sel === tc.id ? ' sel' : '') + (over === tc.id ? ' drop' : '')
+                    }
+                    draggable
+                    onClick={() => select(tc.id)}
+                    onKeyDown={(e) =>
+                      altMove(e, (delta) =>
+                        window.api.apply({ t: 'moveTestCaseBy', id: tc.id, delta })
+                      )
+                    }
+                    onDragStart={(e) => e.dataTransfer.setData('text/tc', tc.id)}
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                      setOver(tc.id)
+                    }}
+                    onDragLeave={() => setOver(null)}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setOver(null)
+                      const entry = Number(e.dataTransfer.getData('text/entry'))
+                      if (entry) {
+                        // ステップを、このテストケースの末尾へ移す。
+                        window.api.apply({
+                          t: 'moveEntryTo',
+                          no: entry,
+                          toTcId: tc.id,
+                          beforeNo: null
+                        })
+                        return
+                      }
+                      const id = e.dataTransfer.getData('text/tc')
+                      if (id && id !== tc.id)
+                        window.api.apply({
+                          t: 'moveTestCase',
+                          id,
+                          toGroup: name === GROUP_NONE ? '' : name,
+                          beforeId: tc.id
+                        })
+                    }}
+                  >
+                    <span className={'dot ' + RESULT_CLASS[tc.result]} title={tc.result} />
+                    <span className="id num">{tc.id}</span>
+                    <span className="t">{tc.title}</span>
+                    <span className="n num">{tc.entries.length || ''}</span>
+                  </button>
+                  <Menu
+                    className="end"
+                    label={`${tc.id} のメニュー`}
+                    trigger="⋯"
+                    items={[
+                      {
+                        label: 'テストケースを削除',
+                        danger: true,
+                        run: () => deleteTestCase(tc.id)
+                      }
+                    ]}
+                  />
+                </div>
               ))}
             </div>
           )
