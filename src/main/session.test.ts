@@ -89,7 +89,7 @@ describe('listSessions', () => {
   it('更新の新しい順に、判定ごとの件数つきで返す。manifest の無いフォルダは無視する', async () => {
     const a = await Session.open(root, 'old')
     await a.apply({ t: 'addTestCase', tc: { result: 'OK' } })
-    await new Promise((r) => setTimeout(r, 20))
+    await new Promise((r) => setTimeout(r, 60))
     const b = await Session.open(root, 'new')
     await b.apply({ t: 'addTestCase', tc: { result: 'NG' } })
     await mkdir(join(root, 'not-a-session'))
