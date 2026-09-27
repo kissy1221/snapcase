@@ -16,14 +16,22 @@ describe('Session', () => {
     const s = await Session.open(root, 'a/b')
     await s.apply({ t: 'addTestCase', tc: { title: 'ログイン', result: 'NG' } })
     const again = await Session.open(root, 'a/b')
-    expect(again.manifest.testcases[0]).toMatchObject({ id: 'TC-001', title: 'ログイン', result: 'NG' })
+    expect(again.manifest.testcases[0]).toMatchObject({
+      id: 'TC-001',
+      title: 'ログイン',
+      result: 'NG'
+    })
   })
 
   it('画像を持つ記録を消すと images/ のファイルも消える', async () => {
     const s = await Session.open(root, 's')
     await s.apply({ t: 'addTestCase', tc: { id: 'A' } })
     await writeFile(join(s.imageDir, '0001.png'), 'x')
-    await s.apply({ t: 'addEntry', tcId: 'A', blocks: [{ type: 'image', image: '0001.png', title: '', url: '' }] })
+    await s.apply({
+      t: 'addEntry',
+      tcId: 'A',
+      blocks: [{ type: 'image', image: '0001.png', title: '', url: '' }]
+    })
     await s.apply({ t: 'deleteEntry', tcId: 'A', no: 1 })
     expect(existsSync(join(s.imageDir, '0001.png'))).toBe(false)
   })

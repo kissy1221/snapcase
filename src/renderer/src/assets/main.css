@@ -8,6 +8,10 @@
   --ng: #d2372f;
   --hold: #c98a12;
   --none: #b3b9c5;
+  --ink2: #586174;
+  --ink3: #8b93a4;
+  --ai-soft: #e9edfa;
+  --mono: 'IBM Plex Mono', 'BIZ UDGothic', ui-monospace, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -17,6 +21,9 @@
     --surface: #262a32;
     --rule: #343944;
     --ai: #7f8cff;
+    --ink2: #aab1c0;
+    --ink3: #7c8494;
+    --ai-soft: #2a2f45;
   }
 }
 
@@ -30,4 +37,35 @@ body {
   color: var(--ink);
   background: var(--paper);
   -webkit-font-smoothing: antialiased;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  font-size: 14px;
+  line-height: 1.7;
+  overflow: hidden;
+}
+button {
+  font: inherit;
+  color: inherit;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+:focus-visible {
+  outline: 2px solid var(--ai);
+  outline-offset: 2px;
+}
+
+/* ウィンドウ上部のドラッグ領域。mac は信号機ボタン、Windows は右上の操作ボタンを避ける。 */
+.drag-top {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 44px;
+  -webkit-app-region: drag;
+  z-index: 0;
 }

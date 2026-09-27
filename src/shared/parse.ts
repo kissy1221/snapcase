@@ -1,8 +1,5 @@
 /** 貼り付けテキストを表に分解する。1行ずつ、タブがあればタブ区切り、無ければカンマ区切り。 */
-export function parseTable(
-  text: string,
-  header: boolean
-): { columns: string[]; rows: string[][] } {
+export function parseTable(text: string, header: boolean): { columns: string[]; rows: string[][] } {
   const cells = text
     .split(/\r?\n/)
     .filter((l) => l.trim() !== '')

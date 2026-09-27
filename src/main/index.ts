@@ -13,6 +13,11 @@ function createWindow(): void {
     minHeight: 480,
     show: false,
     autoHideMenuBar: true,
+    // 独自のタイトルバー(renderer 側の .titlebar)を使う。Windows は操作ボタンだけ重ねる。
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'hidden',
+    ...(process.platform === 'win32'
+      ? { titleBarOverlay: { color: '#f3f4f6', symbolColor: '#1c2230', height: 44 } }
+      : {}),
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

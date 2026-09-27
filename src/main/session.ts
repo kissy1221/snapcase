@@ -30,7 +30,8 @@ export class Session {
       return new Session(dir, normalize(raw, name))
     } catch (e) {
       // manifest が無い(新規)のは正常。壊れている場合は上書きせず、開けないと伝える。
-      if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw new Error('manifest.json を読み込めません')
+      if ((e as NodeJS.ErrnoException).code !== 'ENOENT')
+        throw new Error('manifest.json を読み込めません')
     }
     // 新規は即保存する。保存しないと、最初の操作までホームの一覧に出ない。
     const s = new Session(dir, emptyManifest(name))

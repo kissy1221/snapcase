@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { GROUP_NONE } from './constants'
-import { apply, displayNumbers, emptyManifest, nextImageName, nextNo, nextTcId, normalize, orderedGroups, type Op } from './ops'
+import {
+  apply,
+  displayNumbers,
+  emptyManifest,
+  nextImageName,
+  nextNo,
+  nextTcId,
+  normalize,
+  orderedGroups,
+  type Op
+} from './ops'
 import type { Block, Manifest } from './types'
 
 const img = (name: string): Block => ({ type: 'image', image: name, title: '', url: '' })
@@ -21,10 +31,15 @@ const base = (): Manifest =>
 
 describe('normalize', () => {
   it('最旧のフラット配列を1テストケースに包み、shots を entries+image ブロックへ変換する', () => {
-    const m = normalize([{ no: 3, time: 't', comment: 'c', image: '0003.png', title: 'w', url: 'u' }], 's')
+    const m = normalize(
+      [{ no: 3, time: 't', comment: 'c', image: '0003.png', title: 'w', url: 'u' }],
+      's'
+    )
     expect(m.testcases).toHaveLength(1)
     expect(m.testcases[0].entries[0]).toEqual({
-      no: 3, time: 't', comment: 'c',
+      no: 3,
+      time: 't',
+      comment: 'c',
       blocks: [{ type: 'image', image: '0003.png', title: 'w', url: 'u' }]
     })
   })
@@ -51,7 +66,12 @@ describe('並べ替え', () => {
   })
   it('moveTestCase で別フォルダの指定位置・末尾・未分類へ移せる', () => {
     let m = run(base(), { t: 'moveTestCase', id: 'D', toGroup: 'g1', beforeId: 'C' })
-    expect(m.testcases.map((t) => [t.id, t.group])).toEqual([['A', 'g1'], ['B', 'g2'], ['D', 'g1'], ['C', 'g1']])
+    expect(m.testcases.map((t) => [t.id, t.group])).toEqual([
+      ['A', 'g1'],
+      ['B', 'g2'],
+      ['D', 'g1'],
+      ['C', 'g1']
+    ])
     m = run(m, { t: 'moveTestCase', id: 'A', toGroup: 'g2', beforeId: null })
     expect(ids(m)).toEqual(['B', 'A', 'D', 'C'])
     m = run(m, { t: 'moveTestCase', id: 'B', toGroup: GROUP_NONE, beforeId: null })
@@ -77,8 +97,15 @@ describe('記録とブロック', () => {
   })
   it('記録の削除・ブロックの全削除で、消える画像ファイルが返る', () => {
     const m = withEntries()
-    expect(apply(m, { t: 'deleteEntry', tcId: 'A', no: 2 }).removedImages).toEqual(['0002.png', '0003.png'])
-    expect(apply(m, { t: 'deleteTestCase', id: 'A' }).removedImages).toEqual(['0001.png', '0002.png', '0003.png'])
+    expect(apply(m, { t: 'deleteEntry', tcId: 'A', no: 2 }).removedImages).toEqual([
+      '0002.png',
+      '0003.png'
+    ])
+    expect(apply(m, { t: 'deleteTestCase', id: 'A' }).removedImages).toEqual([
+      '0001.png',
+      '0002.png',
+      '0003.png'
+    ])
     const one = apply(m, { t: 'deleteBlock', tcId: 'A', no: 1, index: 0 })
     expect(one.removedImages).toEqual(['0001.png'])
     expect(one.manifest.testcases[0].entries.map((e) => e.no)).toEqual([2]) // 空の記録は消える
@@ -104,7 +131,12 @@ describe('記録とブロック', () => {
 
 describe('採番と通し番号', () => {
   it('nextTcId は削除しても既存の ID と重ならない', () => {
-    let m = run(emptyManifest('s'), { t: 'addTestCase', tc: {} }, { t: 'addTestCase', tc: {} }, { t: 'addTestCase', tc: {} })
+    let m = run(
+      emptyManifest('s'),
+      { t: 'addTestCase', tc: {} },
+      { t: 'addTestCase', tc: {} },
+      { t: 'addTestCase', tc: {} }
+    )
     m = run(m, { t: 'deleteTestCase', id: 'TC-002' })
     expect(nextTcId(m)).toBe('TC-004')
   })
@@ -115,7 +147,11 @@ describe('採番と通し番号', () => {
       { t: 'addEntry', tcId: 'A', blocks: [img('0002.png')] }, // no2 (g1)
       { t: 'addEntry', tcId: 'D', blocks: [img('0003.png')] } // no3 (未分類)
     )
-    expect([...displayNumbers(m)]).toEqual([[2, 1], [1, 2], [3, 3]]) // g1 → g2 → 未分類の順
+    expect([...displayNumbers(m)]).toEqual([
+      [2, 1],
+      [1, 2],
+      [3, 3]
+    ]) // g1 → g2 → 未分類の順
   })
   it('moveGroupTo でフォルダを指定位置・末尾へ移せる', () => {
     let m = run(base(), { t: 'moveGroupTo', name: GROUP_NONE, beforeName: 'g1' })

@@ -96,6 +96,7 @@ export function displayNumbers(m: Manifest): Map<number, number> {
   return out
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any -- 旧形式の JSON は型を持たない */
 /** 旧スキーマ(最旧: フラット配列 / shots)や欠落を補い、現行の形に揃える。 */
 export function normalize(raw: unknown, session: string): Manifest {
   const m = emptyManifest(session)
@@ -115,7 +116,9 @@ export function normalize(raw: unknown, session: string): Manifest {
           no: sh.no ?? i + 1,
           time: sh.time ?? '',
           comment: sh.comment ?? '',
-          blocks: [{ type: 'image', image: sh.image ?? '', title: sh.title ?? '', url: sh.url ?? '' }]
+          blocks: [
+            { type: 'image', image: sh.image ?? '', title: sh.title ?? '', url: sh.url ?? '' }
+          ]
         }))
     const tc = newTestCase(m, { ...t, result: (t.result || '未実施') as Result })
     tc.entries = entries.map((e) => ({ ...e, blocks: e.blocks ?? [] }))
@@ -123,6 +126,8 @@ export function normalize(raw: unknown, session: string): Manifest {
   })
   return m
 }
+
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 const now = (): string => {
   const d = new Date()

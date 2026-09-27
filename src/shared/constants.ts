@@ -24,6 +24,16 @@ export const BANNER_LEVELS = [
 ] as const
 
 export const CODE_LANGS = [
-  'sql', 'json', 'text', 'log', 'xml', 'yaml',
-  'python', 'javascript', 'shell', 'html', 'csv', 'diff'
+  'sql',
+  'json',
+  'text',
+  'log',
+  'xml',
+  'yaml',
+  'python',
+  'javascript',
+  'shell',
+  'html',
+  'csv',
+  'diff'
 ]

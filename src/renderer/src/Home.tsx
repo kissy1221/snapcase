@@ -13,7 +13,11 @@ const fmt = new Intl.DateTimeFormat('ja-JP', { dateStyle: 'medium', timeStyle: '
 
 function Progress({ s }: { s: SessionSummary }): React.JSX.Element {
   return (
-    <div className="bar" role="img" aria-label={JUDGE.map(([k]) => `${k} ${s.counts[k]}`).join('、')}>
+    <div
+      className="bar"
+      role="img"
+      aria-label={JUDGE.map(([k]) => `${k} ${s.counts[k]}`).join('、')}
+    >
       {JUDGE.map(([k, color]) => (
         <i key={k} style={{ flex: s.counts[k], background: color }} />
       ))}
@@ -32,7 +36,11 @@ export default function Home(): React.JSX.Element {
 
   const open = (n: string): void => {
     setError('')
-    window.api.openSession(n).catch((e: Error) => setError(e.message.replace(/^Error invoking remote method '.*?': Error: /, '')))
+    window.api
+      .openSession(n)
+      .catch((e: Error) =>
+        setError(e.message.replace(/^Error invoking remote method '.*?': Error: /, ''))
+      )
   }
 
   return (
@@ -56,10 +64,16 @@ export default function Home(): React.JSX.Element {
           {sessions?.some((s) => s.name === name.trim()) ? '続きから開く' : '新しく始める'}
         </button>
       </form>
-      {error && <p className="error" role="alert">{error}</p>}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
 
       {sessions && sessions.length === 0 && (
-        <p className="empty">まだセッションがありません。名前を入力して、最初のセッションを作りましょう。</p>
+        <p className="empty">
+          まだセッションがありません。名前を入力して、最初のセッションを作りましょう。
+        </p>
       )}
       <ul className="sessions">
         {sessions?.map((s) => (
