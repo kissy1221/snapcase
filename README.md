@@ -35,6 +35,8 @@ npm run lint
 npm run build:mac  # / build:win / build:linux（配布物は dist/）
 ```
 
+配布物のビルドとリリース（GitHub Actions・署名・成果物）は [docs/release.md](docs/release.md)。
+
 保存先は既定で「書類/証跡作ったったー」。自動テストでは環境変数 `EVIDENCE_DATA_DIR` で差し替える。
 
 ```
