@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { nextTcId } from '../../shared/ops'
-import type { Manifest, Result } from '../../shared/types'
+import type { Manifest, Result, TestCase } from '../../shared/types'
 import { OVERVIEW, getSelection, select, toast } from './store'
 
 export const RESULT_CLASS: Record<Result, string> = { OK: 'ok', NG: 'ng', 保留: 'hold', 未実施: '' }
@@ -74,4 +74,15 @@ export function deleteTestCase(id: string): void {
   select(OVERVIEW)
   void window.api.apply({ t: 'deleteTestCase', id })
   undoToast(`${id} を削除しました`)
+}
+
+/** テストケースを複製する。記録(画像)は複製せず、記載欄だけを写す。 */
+export async function duplicateTestCase(m: Manifest, tc: TestCase): Promise<void> {
+  const { entries: _entries, ...rest } = tc
+  const id = nextTcId(m)
+  await window.api.apply({
+    t: 'addTestCase',
+    tc: { ...rest, id, title: `${tc.title} のコピー`, result: '未実施' }
+  })
+  select(id)
 }

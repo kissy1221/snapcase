@@ -1,9 +1,16 @@
 import { useState } from 'react'
 import { GROUP_NONE, RESULTS } from '../../shared/constants'
 import { orderedGroups } from '../../shared/ops'
-import type { Manifest } from '../../shared/types'
-import { COLOR, RESULT_CLASS, addTestCase, deleteTestCase, importTestCases } from './helpers'
-import { Menu } from './Menu'
+import type { Manifest, TestCase } from '../../shared/types'
+import {
+  COLOR,
+  RESULT_CLASS,
+  addTestCase,
+  deleteTestCase,
+  duplicateTestCase,
+  importTestCases
+} from './helpers'
+import { Menu, type MenuItem } from './Menu'
 import { OVERVIEW, TABLE, select, useSelection } from './store'
 
 export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
@@ -18,6 +25,34 @@ export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
     e.preventDefault()
     run(e.key === 'ArrowUp' ? -1 : 1)
   }
+
+  const tcMenu = (tc: TestCase, i: number, count: number, group: string): MenuItem[] => [
+    { label: '複製', run: () => duplicateTestCase(m, tc) },
+    {
+      label: '上へ移動',
+      disabled: i === 0,
+      run: () => window.api.apply({ t: 'moveTestCaseBy', id: tc.id, delta: -1 })
+    },
+    {
+      label: '下へ移動',
+      disabled: i === count - 1,
+      run: () => window.api.apply({ t: 'moveTestCaseBy', id: tc.id, delta: 1 })
+    },
+    ...(groups.length > 1
+      ? [
+          { label: 'フォルダへ移動', heading: true },
+          ...groups
+            .filter((g) => g.name !== group)
+            .map((g) => ({
+              label: g.name,
+              run: () =>
+                window.api.apply({ t: 'moveTestCase', id: tc.id, toGroup: g.name, beforeId: null })
+            }))
+        ]
+      : []),
+    { label: '', heading: true },
+    { label: 'テストケースを削除', danger: true, run: () => deleteTestCase(tc.id) }
+  ]
 
   return (
     <aside className="sidebar">
@@ -63,7 +98,7 @@ export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
                   {done} / {tcs.length}
                 </span>
               </div>
-              {tcs.map((tc) => (
+              {tcs.map((tc, i) => (
                 <div
                   key={tc.id}
                   className="tc-row"
@@ -123,13 +158,7 @@ export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
                     className="end"
                     label={`${tc.id} のメニュー`}
                     trigger="⋯"
-                    items={[
-                      {
-                        label: 'テストケースを削除',
-                        danger: true,
-                        run: () => deleteTestCase(tc.id)
-                      }
-                    ]}
+                    items={tcMenu(tc, i, tcs.length, name)}
                   />
                 </div>
               ))}
