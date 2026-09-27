@@ -54,7 +54,7 @@ export default function TableView({ m }: { m: Manifest }): React.JSX.Element {
 
   return (
     <div className="page wide">
-      <div className="crumb">一覧表</div>
+      <div className="crumb">一覧</div>
       <h1 className="title static">サマリ</h1>
 
       <div className="sum">

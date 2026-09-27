@@ -78,7 +78,8 @@ export function deleteTestCase(id: string): void {
 
 /** テストケースを複製する。記録(画像)は複製せず、記載欄だけを写す。 */
 export async function duplicateTestCase(m: Manifest, tc: TestCase): Promise<void> {
-  const { entries: _entries, ...rest } = tc
+  const rest: Partial<TestCase> = { ...tc }
+  delete rest.entries // ステップ(画像を含む)は複製しない
   const id = nextTcId(m)
   await window.api.apply({
     t: 'addTestCase',

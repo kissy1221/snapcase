@@ -93,8 +93,8 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
         run: () => importTestCases()
       },
       { id: 'export', label: '書き出す', run: () => setOverlay('export') },
-      { id: 'table', label: '一覧表（サマリ）を開く', run: () => select(TABLE) },
-      { id: 'overview', label: '概要と実施情報を開く', run: () => select(OVERVIEW) },
+      { id: 'table', label: '一覧を開く', run: () => select(TABLE) },
+      { id: 'overview', label: '概要を開く', run: () => select(OVERVIEW) },
       { id: 'settings', label: '設定', run: () => setOverlay('settings') },
       { id: 'home', label: 'ホームへ戻る', run: () => window.api.closeSession() }
     ]
