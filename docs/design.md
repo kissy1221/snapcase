@@ -39,16 +39,18 @@
 
 - ビルド：electron-vite
 - 配布パッケージ：electron-builder（Windows はインストーラと単体 exe、macOS は dmg、Linux は AppImage）
-- UI：React、TypeScript、Tailwind CSS。shadcn/ui の部品のうち、使うもの（Dialog、Menu、Popover、Command、Toast）だけを取り込む。アイコンは lucide
+- UI：React、TypeScript、素の CSS（トークンは CSS 変数）。ダイアログはネイティブの `<dialog>`、コマンドパレットとトーストは自作（数十行）。Tailwind・shadcn/ui・アイコンライブラリは、必要が出るまで入れない
 - 追加する依存
   - `get-windows`：最前面ウィンドウの ID・タイトル・範囲・プロセス、macOS では URL も取得する
-  - `exceljs`：xlsx の出力と、xlsx / CSV の取り込み
+  - `exceljs`：xlsx の出力と、xlsx の取り込み
+  - `@fontsource/ibm-plex-sans-jp`、`@fontsource/ibm-plex-mono`：UI のフォントの同梱
 - 使わないもの
   - 注釈ライブラリ：Canvas 2D の描画関数を1つ書き、画面表示と焼き込みの両方で使う
   - ドラッグ＆ドロップのライブラリ：HTML5 標準の機能を使う
   - 状態管理ライブラリ：`useSyncExternalStore` で足りる
   - iconv：Node 標準の `TextDecoder('shift_jis')` を使う
-- テスト：vitest。対象は `shared/` の純粋関数、取り込み、Markdown の生成
+  - CSV のライブラリ：引用符と改行に対応した解析を `shared/import.ts` に書いた
+- テスト：vitest（`npm test`）。対象は `shared/` の更新処理と解析、セッションの読み書き、取り込み、4形式の書き出し。画面の通し確認は Playwright（`_electron`）で行った
 
 ### プロセス構成
 
@@ -135,6 +137,29 @@ src/
 - 角丸は階層ごとに変える：ウィンドウ 10px、ボタン 6px、撮影ボタンは完全な円。影は、浮いている撮影ボタンとポップオーバーにだけ付ける。
 - 動き：撮影して保存した証跡がタイムラインに追加されるときだけ動かす。`prefers-reduced-motion` の設定を尊重する。
 
-## 未決事項
 
-- macOS 版の配布方法：Apple Developer で署名と公証をするか、署名なしで社内だけに配るか。
+## 実装状況（2026-09-27）
+
+設計した機能はすべて実装した。旧版から変えた点と、確認できていない点を記す。
+
+### 旧版から挙動を変えた点
+
+- 直前の取り消しは「番号が最大の記録」を消す。旧版は「最後のテストケースの最後の記録」。並べ替えたあとでも、最後に撮ったものが消える。
+- テストケース ID の採番は、既存の最大番号+1 にした。旧版は件数+1 で、削除のあとに重複した。取り込み・追加で ID が重なったときは `-2`, `-3` を付ける。
+- 列見出しの認識は、完全一致を先に判定する。旧版は英語の `note` を別名 `no` の部分一致で ID 列と誤認した。
+- PDF のフッタは、ページ番号（n / 全体）だけを出す。旧版は Edge / Chrome の既定で `file://` のパスと日付が出た。
+
+### 確認できていないこと
+
+実機での撮影は画面収録の許可が必要なため、自動テストの範囲外になっている。
+
+- ホットキーでの実ウィンドウの撮影、撮影ボタンからのウィンドウ選択（macOS / Windows）
+- Windows 全般（開発機は macOS）。特に、アドレスバーの URL を PowerShell の UI Automation で読む処理、タイトルバーの操作ボタンの重なり、インストーラの生成
+- Linux
+- macOS の署名と公証（未署名のまま。配布方法は未決）
+- 編集画面を閉じたあと、元のアプリにフォーカスが戻ること（macOS は `app.hide()` で戻す想定）
+
+## 未決事項（更新）
+
+- macOS 版の配布方法：署名と公証をするか、社内だけに未署名で配るか。
+- リリースの自動化（CI）：旧版は GitLab CI。新版の置き場所が決まってから作る。
