@@ -98,10 +98,7 @@
   text-align: left;
   cursor: pointer;
 }
-.folder-head .chev {
-  width: 12px;
-}
-.folder-head .count {
+.folder-head .folder-head .count {
   margin-left: auto;
   font-weight: 400;
   color: var(--ink3);
@@ -401,34 +398,6 @@ textarea.auto {
   font-size: 12px;
   color: var(--ink3);
 }
-.tools {
-  display: inline-flex;
-  gap: 2px;
-  opacity: 0;
-  transition: opacity 0.12s;
-}
-.entry:hover .tools,
-.tools:focus-within,
-.block:hover .tools {
-  opacity: 1;
-}
-.tools button {
-  height: 24px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 4px;
-  background: none;
-  font-size: 12px;
-  color: var(--ink2);
-  cursor: pointer;
-}
-.tools button:hover:not(:disabled) {
-  background: var(--paper);
-}
-.tools button:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
 .blocks {
   display: grid;
   gap: 12px;
@@ -436,14 +405,6 @@ textarea.auto {
 }
 .block {
   position: relative;
-}
-.block > .tools {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  background: var(--surface);
-  border-radius: 6px;
-  box-shadow: 0 0 0 1px var(--rule);
 }
 .shot {
   margin: 0;
@@ -600,19 +561,7 @@ th {
   color: var(--ai);
   box-shadow: inset 0 0 0 1px var(--ai);
 }
-.add-block {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--ink3);
-}
-.add-block summary {
-  cursor: pointer;
-  width: max-content;
-}
-.add-block .chips {
-  margin-top: 6px;
-}
-.danger {
+.delete-tc {
   margin-top: 24px;
   border: 0;
   background: none;
@@ -620,7 +569,7 @@ th {
   color: var(--ink3);
   cursor: pointer;
 }
-.danger:hover {
+.delete-tc:hover {
   color: var(--ng);
 }
 
@@ -1119,10 +1068,6 @@ input.line {
   box-shadow: 0 -3px 0 var(--ai);
   border-radius: 2px;
 }
-.tools button.handle {
-  letter-spacing: -2px;
-  font-weight: 700;
-}
 
 /* コードの色付け(highlight.js のクラス)。書き出す HTML にも同じ色を使う。 */
 :root {
@@ -1188,4 +1133,414 @@ input.line {
 }
 .hljs-addition {
   color: var(--c-add);
+}
+
+/* ---- メニュー(⋯ と ＋追加) ---- */
+.menu {
+  position: relative;
+  display: inline-block;
+}
+.menu.end {
+  flex: none;
+}
+.menu-btn {
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.menu.end .menu-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--ink3);
+}
+.menu.end .menu-btn:hover,
+.menu.end .menu-btn[aria-expanded='true'] {
+  background: var(--paper);
+  color: var(--ink);
+}
+.menu-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 220px;
+  max-width: 320px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 4px;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow:
+    0 0 0 1px var(--rule),
+    0 12px 32px rgba(20, 24, 34, 0.18);
+}
+.add-inline .menu-list,
+.add-entry .menu-list {
+  right: auto;
+  left: 0;
+}
+.menu-list.up {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+.menu-list button {
+  display: block;
+  width: 100%;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  font-size: 13px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.menu-list button:hover:not(:disabled),
+.menu-list button:focus-visible {
+  background: var(--ai-soft);
+  outline: none;
+}
+.menu-list button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.menu-list button.danger {
+  color: var(--ng);
+}
+.menu-heading {
+  padding: 6px 12px 2px;
+  font-size: 11px;
+  color: var(--ink3);
+}
+.menu-heading:empty {
+  height: 1px;
+  margin: 4px 0;
+  padding: 0;
+  background: var(--rule);
+}
+
+/* 追加ボタンは常に見せる(ホバーで初めて出る操作は作らない) */
+.add-inline {
+  margin-top: 8px;
+}
+.add-inline .menu-btn {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--ink2);
+}
+.add-inline .menu-btn:hover {
+  background: var(--paper);
+  color: var(--ai);
+}
+.add-entry .menu-btn {
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ai);
+  box-shadow: inset 0 0 0 1px var(--ai);
+}
+.add-entry .menu-btn:hover {
+  background: var(--ai-soft);
+}
+.hint {
+  font-size: 12px;
+  color: var(--ink3);
+}
+.composer .chips {
+  gap: 12px;
+}
+
+/* ブロック: 左の余白につかみ(⋮⋮)、右上に ⋯。本文はクリックで編集 */
+.block {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 28px;
+  align-items: start;
+  column-gap: 4px;
+  margin-left: -22px;
+}
+.grip {
+  padding-top: 6px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -2px;
+  color: var(--ink3);
+  opacity: 0.45;
+  user-select: none;
+}
+.block:hover .grip {
+  opacity: 1;
+}
+.block-body {
+  min-width: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.block-body:hover {
+  box-shadow: 0 0 0 2px var(--ai-soft);
+}
+.block-body:focus-visible {
+  outline: 2px solid var(--ai);
+  outline-offset: 2px;
+}
+.block > .menu {
+  padding-top: 2px;
+}
+.dragging {
+  opacity: 0.35;
+}
+.viewer {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-out;
+}
+.viewer img {
+  display: block;
+  max-width: 100%;
+  max-height: 80vh;
+  margin: 0 auto;
+}
+.dialog:has(.viewer) {
+  width: min(1100px, calc(100vw - 48px));
+}
+.e-head .menu {
+  margin-left: 4px;
+}
+
+/* ---- 一覧表(サマリと、セルで編集できる表) ---- */
+.page.wide {
+  max-width: none;
+  padding: 32px 32px 120px;
+}
+.sum {
+  margin-bottom: 36px;
+}
+.sum-rates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 48px;
+  margin-bottom: 16px;
+}
+.sum-rates > div {
+  display: grid;
+}
+.sum-rates .big {
+  font-size: 34px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+.sum-rates .cap {
+  font-size: 12px;
+  color: var(--ink3);
+}
+.sum .bar {
+  height: 8px;
+}
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 24px;
+}
+.card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--paper);
+  font-size: 13px;
+  cursor: pointer;
+}
+.card .n {
+  font-size: 18px;
+  font-weight: 600;
+}
+.card.on {
+  box-shadow: 0 0 0 2px var(--ai);
+  background: var(--ai-soft);
+}
+.by-group {
+  width: 100%;
+  max-width: 760px;
+  font-size: 13px;
+}
+.by-group th,
+.by-group td {
+  padding: 6px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+}
+.by-group th {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink3);
+}
+.by-group .r {
+  text-align: right;
+}
+.by-group td.ng {
+  color: var(--ng);
+  font-weight: 600;
+}
+.by-group .rate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 150px;
+}
+.by-group .rate .bar {
+  flex: 1;
+  height: 6px;
+}
+.q {
+  width: 220px;
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--paper);
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+}
+.sec-head .spacer {
+  flex: 1;
+}
+
+.grid-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--rule);
+}
+.grid {
+  width: max-content;
+  min-width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+.grid th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink2);
+  background: var(--paper);
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+}
+.grid td {
+  padding: 2px 4px;
+  vertical-align: top;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
+}
+.grid td:last-child,
+.grid th:last-child {
+  border-right: 0;
+}
+.grid tr.ng td {
+  background: color-mix(in srgb, var(--ng) 6%, transparent);
+}
+.grid td.c {
+  text-align: center;
+  color: var(--ink3);
+  padding-top: 8px;
+}
+.grid td.none {
+  padding: 24px;
+  text-align: center;
+  color: var(--ink3);
+}
+.grid textarea.auto,
+.grid input {
+  width: 100%;
+  padding: 6px;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  resize: none;
+}
+.grid input {
+  height: 32px;
+}
+.grid textarea.auto:hover,
+.grid input:hover {
+  background: var(--paper);
+}
+.grid textarea.auto:focus,
+.grid input:focus {
+  background: var(--surface);
+  outline: 2px solid var(--ai);
+  outline-offset: -2px;
+}
+.grid .link {
+  padding: 6px;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  color: var(--ai);
+  cursor: pointer;
+}
+.grid .link:hover {
+  text-decoration: underline;
+}
+select.res {
+  width: 100%;
+  height: 32px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--paper);
+  color: var(--ink2);
+  cursor: pointer;
+}
+select.res.ok {
+  background: var(--ok);
+  color: #fff;
+}
+select.res.ng {
+  background: var(--ng);
+  color: #fff;
+}
+select.res.hold {
+  background: var(--hold);
+  color: #fff;
+}
+.add-row {
+  margin-top: 12px;
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  font-size: 13px;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.add-row:hover {
+  color: var(--ai);
 }

@@ -27,12 +27,16 @@ export const getManifest = manifestStore.get
 
 /** 選択中のテストケースの id。OVERVIEW は概要ページ。 */
 export const OVERVIEW = '@overview'
+/** 一覧表(サマリと、セルを直接編集できる表)。 */
+export const TABLE = '@table'
+/** ページを表す特別な値(テストケースの id ではない)。 */
+export const isPage = (v: string): boolean => v === OVERVIEW || v === TABLE
 const selStore = createStore<string>(OVERVIEW)
 export const useSelection = selStore.use
 /** 選択を変え、ホットキーでの撮影先として main にも伝える。 */
 export const select = (v: string): void => {
   selStore.set(v)
-  window.api.setSelection(v === OVERVIEW ? null : v)
+  window.api.setSelection(isPage(v) ? null : v)
 }
 export const getSelection = selStore.get
 

@@ -12,10 +12,10 @@ export const COLOR: Record<Result, string> = {
 }
 
 /** 追加が manifest に反映されてから選択する(先に選ぶと「存在しない」と見なされ概要に戻る)。 */
-export async function addTestCase(m: Manifest, group = ''): Promise<void> {
+export async function addTestCase(m: Manifest, group = '', open = true): Promise<void> {
   const id = nextTcId(m)
   await window.api.apply({ t: 'addTestCase', tc: { id, title: '新しいテストケース', group } })
-  select(id)
+  if (open) select(id)
 }
 
 export const HOTKEY_LABEL = /Mac/.test(navigator.platform) ? ['⌃', '⌥', 'S'] : ['Ctrl', 'Alt', 'S']
@@ -47,7 +47,7 @@ export async function importTestCases(path?: string): Promise<void> {
   )
 }
 
-/** ドロップされたファイルを、画像なら証跡へ、CSV / Excel ならテストケースへ取り込む。 */
+/** ドロップされたファイルを、画像ならステップへ、CSV / Excel ならテストケースへ取り込む。 */
 export async function dropFiles(files: FileList): Promise<void> {
   const spec = [...files].find(isSpec)
   if (spec) return importTestCases(window.api.pathForFile(spec))
@@ -64,3 +64,7 @@ export const useCompact = (): boolean =>
     },
     () => query.matches
   )
+
+/** 元に戻せる操作の後に出すトースト。 */
+export const undoToast = (msg: string): void =>
+  toast({ msg, action: { label: '元に戻す', run: () => void window.api.undo() } })

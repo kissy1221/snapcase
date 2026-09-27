@@ -37,7 +37,7 @@ export default function ExportDialog({ onClose }: { onClose: () => void }): Reac
   }
 
   return (
-    <Dialog title="証跡を書き出す" onClose={onClose}>
+    <Dialog title="書き出す" onClose={onClose}>
       <form
         method="dialog"
         className="form"

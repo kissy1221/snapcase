@@ -43,7 +43,9 @@ export class Session {
     await mkdir(join(dir, 'images'), { recursive: true })
     try {
       const raw = JSON.parse(await readFile(join(dir, 'manifest.json'), 'utf-8'))
-      return new Session(dir, normalize(raw, name))
+      const opened = new Session(dir, normalize(raw, name))
+      await opened.collectGarbage()
+      return opened
     } catch (e) {
       // manifest が無い(新規)のは正常。壊れている場合は上書きせず、開けないと伝える。
       if ((e as NodeJS.ErrnoException).code !== 'ENOENT')
@@ -55,12 +57,48 @@ export class Session {
     return s
   }
 
-  /** 操作を適用して保存する。参照されなくなった画像は images/ から消す。 */
+  private past: Manifest[] = []
+  private future: Manifest[] = []
+
+  /** 操作を適用して保存する。元に戻せるよう、直前の状態を覚える(画像ファイルは消さない)。 */
   async apply(op: Op): Promise<void> {
     const r = apply(this.manifest, op)
+    this.past.push(this.manifest)
+    if (this.past.length > 200) this.past.shift()
+    this.future = []
     this.manifest = r.manifest
     await this.save()
-    await Promise.all(r.removedImages.map((f) => unlink(join(this.imageDir, f)).catch(() => {})))
+  }
+
+  /** 1つ前の状態に戻す。戻せるものが無ければ false。 */
+  async undo(): Promise<boolean> {
+    const prev = this.past.pop()
+    if (!prev) return false
+    this.future.push(this.manifest)
+    this.manifest = prev
+    await this.save()
+    return true
+  }
+
+  async redo(): Promise<boolean> {
+    const next = this.future.pop()
+    if (!next) return false
+    this.past.push(this.manifest)
+    this.manifest = next
+    await this.save()
+    return true
+  }
+
+  /** どの記録からも参照されていない画像(削除した記録など)を消す。元に戻せなくなるので、閉じるとき・開くときだけ行う。 */
+  async collectGarbage(): Promise<void> {
+    const used = new Set(
+      this.manifest.testcases.flatMap((t) =>
+        t.entries.flatMap((e) => e.blocks.flatMap((b) => (b.type === 'image' ? [b.image] : [])))
+      )
+    )
+    for (const f of await readdir(this.imageDir).catch(() => [])) {
+      if (/^\d+\.png$/.test(f) && !used.has(f)) await unlink(join(this.imageDir, f)).catch(() => {})
+    }
   }
 
   async save(): Promise<void> {

@@ -29,7 +29,7 @@ export interface SessionSummary {
   total: number
   /** 判定ごとのテストケース数 */
   counts: Record<Result, number>
-  /** 記録(証跡)の総数 */
+  /** ステップの総数 */
   entries: number
 }
 
@@ -40,6 +40,9 @@ export interface Api {
   openSession(name: string): Promise<Manifest>
   closeSession(): Promise<void>
   apply(op: Op): Promise<void>
+  /** 1つ前の状態に戻す / やり直す。動かせたときだけ true。 */
+  undo(): Promise<boolean>
+  redo(): Promise<boolean>
   getSettings(): Promise<Settings>
   /** 一部だけ更新する。ホットキーが使えない等のときは error を返し、設定は変えない。 */
   setSettings(patch: Partial<Settings>): Promise<{ settings: Settings } | { error: string }>

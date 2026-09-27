@@ -106,6 +106,7 @@ export function registerIpc(): void {
   })
   ipcMain.handle('session:close', async () => {
     await exportOnClose()
+    await state.session?.collectGarbage()
     state.session = null
     state.selectedTc = null
     broadcast()
@@ -114,6 +115,16 @@ export function registerIpc(): void {
     if (!state.session) return
     await state.session.apply(op)
     broadcast()
+  })
+  ipcMain.handle('session:undo', async () => {
+    const ok = (await state.session?.undo()) ?? false
+    if (ok) broadcast()
+    return ok
+  })
+  ipcMain.handle('session:redo', async () => {
+    const ok = (await state.session?.redo()) ?? false
+    if (ok) broadcast()
+    return ok
   })
   ipcMain.on('selection', (_e, id: string | null) => (state.selectedTc = id))
 

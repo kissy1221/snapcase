@@ -11,7 +11,7 @@ export function BlockView({ b }: { b: Block }): React.JSX.Element | null {
     case 'image':
       return (
         <figure className="shot">
-          <img src={`evidence://img/${b.image}`} alt="" />
+          <img src={`evidence://img/${b.image}`} alt="" title="クリックで拡大" />
           {(b.title || b.url) && (
             <figcaption>
               {b.title && <span>{b.title}</span>}
@@ -297,6 +297,23 @@ export function BlockDialog({
           </button>
         </div>
       </form>
+    </Dialog>
+  )
+}
+
+/** 画像の拡大表示。クリックか Esc で閉じる。 */
+export function ImageViewer({
+  b,
+  onClose
+}: {
+  b: Extract<Block, { type: 'image' }>
+  onClose: () => void
+}): React.JSX.Element {
+  return (
+    <Dialog title={b.title || '画像'} onClose={onClose}>
+      <button type="button" className="viewer" onClick={onClose} aria-label="閉じる">
+        <img src={`evidence://img/${b.image}`} alt="" />
+      </button>
     </Dialog>
   )
 }
