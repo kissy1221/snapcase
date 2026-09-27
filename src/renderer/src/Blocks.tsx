@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BANNER_LEVELS, CODE_LANGS } from '../../shared/constants'
+import { highlight } from '../../shared/highlight'
 import { linksToText, parseLinks, parseTable, tableToText } from '../../shared/parse'
 import type { Block } from '../../shared/types'
 import { BLOCK_LABEL, type TextBlockType } from './blockMeta'
@@ -26,7 +27,9 @@ export function BlockView({ b }: { b: Block }): React.JSX.Element | null {
             {b.label || 'コード'}
             <em>{b.lang}</em>
           </div>
-          <pre>{b.text}</pre>
+          <pre>
+            <code dangerouslySetInnerHTML={{ __html: highlight(b.text, b.lang) }} />
+          </pre>
         </div>
       )
     case 'table':

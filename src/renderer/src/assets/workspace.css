@@ -1104,3 +1104,88 @@ input.line {
     bottom: 72px;
   }
 }
+
+/* 並べ替え */
+.handle {
+  cursor: grab;
+}
+.marker.handle:hover {
+  box-shadow: inset 0 0 0 2px var(--ai);
+}
+.drop-before {
+  box-shadow: 0 -3px 0 var(--ai);
+}
+.block.drop-before {
+  box-shadow: 0 -3px 0 var(--ai);
+  border-radius: 2px;
+}
+.tools button.handle {
+  letter-spacing: -2px;
+  font-weight: 700;
+}
+
+/* コードの色付け(highlight.js のクラス)。書き出す HTML にも同じ色を使う。 */
+:root {
+  --c-kw: #2c4bb8;
+  --c-str: #1f7a4d;
+  --c-num: #b45309;
+  --c-com: #8b93a4;
+  --c-attr: #7c3aed;
+  --c-name: #0e7490;
+  --c-del: #c62828;
+  --c-add: #1f8a5b;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-kw: #8fa0ff;
+    --c-str: #6fcf97;
+    --c-num: #f2b26b;
+    --c-com: #7c8494;
+    --c-attr: #c4a5ff;
+    --c-name: #5fd0e8;
+    --c-del: #ff8a80;
+    --c-add: #6fcf97;
+  }
+}
+.hljs-keyword,
+.hljs-built_in,
+.hljs-type,
+.hljs-literal,
+.hljs-selector-tag {
+  color: var(--c-kw);
+  font-weight: 500;
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-template-variable {
+  color: var(--c-str);
+}
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet {
+  color: var(--c-num);
+}
+.hljs-comment,
+.hljs-quote,
+.hljs-meta {
+  color: var(--c-com);
+  font-style: italic;
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-property {
+  color: var(--c-attr);
+}
+.hljs-title,
+.hljs-name,
+.hljs-section,
+.hljs-tag {
+  color: var(--c-name);
+}
+.hljs-deletion {
+  color: var(--c-del);
+}
+.hljs-addition {
+  color: var(--c-add);
+}

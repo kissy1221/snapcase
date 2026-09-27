@@ -12,6 +12,7 @@ type Editing = { type: TextBlockType; no?: number; index?: number; initial?: Blo
 
 export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): React.JSX.Element {
   const [editing, setEditing] = useState<Editing | null>(null)
+  const [over, setOver] = useState<string | null>(null) // ドロップ位置の強調(直前に線を出す)
   const numbers = displayNumbers(m)
   const apply = window.api.apply
   const patch = (p: Partial<TestCase>): Promise<void> =>
@@ -25,6 +26,29 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
       apply({ t: 'addBlock', tcId: tc.id, no: editing.no, block: b })
     else apply({ t: 'updateBlock', tcId: tc.id, no: editing.no, index: editing.index, block: b })
     setEditing(null)
+  }
+
+  /** ドラッグ中の種類が合うときだけ、ドロップを受けて位置を強調する。 */
+  const hover = (ev: React.DragEvent, key: string, accepts: string[]): void => {
+    if (!accepts.some((t) => ev.dataTransfer.types.includes(t))) return
+    ev.preventDefault()
+    ev.stopPropagation()
+    setOver(key)
+  }
+  const dropEntry = (ev: React.DragEvent, beforeNo: number | null): void => {
+    const no = Number(ev.dataTransfer.getData('text/entry'))
+    if (!no) return
+    ev.preventDefault()
+    ev.stopPropagation()
+    setOver(null)
+    apply({ t: 'moveEntryTo', no, toTcId: tc.id, beforeNo })
+  }
+  const dropBlock = (ev: React.DragEvent, src: string, toNo: number, toIndex: number): void => {
+    ev.preventDefault()
+    ev.stopPropagation()
+    setOver(null)
+    const [no, index] = src.split(':').map(Number)
+    apply({ t: 'moveBlockTo', no, index, toNo, toIndex })
   }
 
   const remove = (): void => {
@@ -120,8 +144,27 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
       )}
 
       {tc.entries.map((e, i) => (
-        <section className="entry" key={e.no}>
-          <div className="marker num" title="通し番号">
+        <section
+          className={'entry' + (over === 'e' + e.no ? ' drop-before' : '')}
+          key={e.no}
+          onDragOver={(ev) => hover(ev, 'e' + e.no, ['text/entry', 'text/block'])}
+          onDragLeave={() => setOver(null)}
+          onDrop={(ev) => {
+            // ブロックは、この記録の末尾へ。記録は、この記録の直前へ。
+            const blk = ev.dataTransfer.getData('text/block')
+            if (blk) return dropBlock(ev, blk, e.no, Infinity)
+            dropEntry(ev, e.no)
+          }}
+        >
+          <div
+            className="marker num handle"
+            draggable
+            title="ドラッグして並べ替え（別のテストケースへは、左の一覧にドロップ）"
+            onDragStart={(ev) => {
+              ev.dataTransfer.setData('text/entry', String(e.no))
+              ev.dataTransfer.setDragImage(ev.currentTarget.closest('.entry')!, 0, 0)
+            }}
+          >
             {numbers.get(e.no)}
           </div>
           <div className="e-body">
@@ -159,9 +202,44 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
             </div>
             <div className="blocks">
               {e.blocks.map((b, j) => (
-                <div className="block" key={j}>
+                <div
+                  className={'block' + (over === `b${e.no}:${j}` ? ' drop-before' : '')}
+                  key={j}
+                  onDragOver={(ev) => hover(ev, `b${e.no}:${j}`, ['text/block'])}
+                  onDragLeave={() => setOver(null)}
+                  onDrop={(ev) => {
+                    const blk = ev.dataTransfer.getData('text/block')
+                    if (blk) dropBlock(ev, blk, e.no, j)
+                  }}
+                >
                   <BlockView b={b} />
                   <span className="tools">
+                    <button
+                      className="handle"
+                      aria-label="ドラッグしてブロックを移動"
+                      title="ドラッグして移動（別の記録へも）"
+                      draggable
+                      onDragStart={(ev) => {
+                        ev.dataTransfer.setData('text/block', `${e.no}:${j}`)
+                        ev.dataTransfer.setDragImage(ev.currentTarget.closest('.block')!, 0, 0)
+                      }}
+                    >
+                      ⋮⋮
+                    </button>
+                    <button
+                      aria-label="ブロックを上へ"
+                      disabled={j === 0}
+                      onClick={() => apply({ t: 'moveBlockBy', no: e.no, index: j, delta: -1 })}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      aria-label="ブロックを下へ"
+                      disabled={j === e.blocks.length - 1}
+                      onClick={() => apply({ t: 'moveBlockBy', no: e.no, index: j, delta: 1 })}
+                    >
+                      ↓
+                    </button>
                     {b.type !== 'image' && (
                       <button
                         aria-label="ブロックを編集"
@@ -205,7 +283,12 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
         </section>
       ))}
 
-      <div className="composer">
+      <div
+        className={'composer' + (over === 'end' ? ' drop-before' : '')}
+        onDragOver={(ev) => hover(ev, 'end', ['text/entry'])}
+        onDragLeave={() => setOver(null)}
+        onDrop={(ev) => dropEntry(ev, null)}
+      >
         <div className="marker">＋</div>
         <div className="chips">
           <button className="chip" onClick={() => window.api.pickImages()}>

@@ -1,3 +1,4 @@
+import { highlight } from '../../shared/highlight'
 import { BANNER_LEVELS } from '../../shared/constants'
 import type { Block, Result } from '../../shared/types'
 import type { Doc } from './model'
@@ -32,7 +33,7 @@ function block(d: Doc, b: Block, seq: number): string {
       ].join('')
     }
     case 'code':
-      return `<div class="blk code">${b.label ? `<div class="blk-label">${esc(b.label)}</div>` : ''}<pre>${esc(b.text)}</pre></div>`
+      return `<div class="blk code">${b.label ? `<div class="blk-label">${esc(b.label)}</div>` : ''}<pre><code>${highlight(b.text, b.lang)}</code></pre></div>`
     case 'table':
       return `<div class="blk">${b.label ? `<div class="blk-label">${esc(b.label)}</div>` : ''}<table class="dtable">${
         b.columns.length
@@ -86,6 +87,13 @@ a{color:#2c4bb8;text-decoration:none}
 .b-ok{background:#1f8a5b}.b-ng{background:#d2372f}.b-hold{background:#c98a12}.b-none{background:#9aa0a6}
 .cat{display:inline-block;font-size:11px;font-weight:bold;padding:0 7px;border-radius:4px;border:1.5px solid currentColor;vertical-align:middle;margin-left:6px}
 .top{font-size:12px}
+.hljs-keyword,.hljs-built_in,.hljs-type,.hljs-literal,.hljs-selector-tag{color:#2c4bb8;font-weight:bold}
+.hljs-string,.hljs-regexp,.hljs-template-variable{color:#1f7a4d}
+.hljs-number,.hljs-symbol,.hljs-bullet{color:#b45309}
+.hljs-comment,.hljs-quote,.hljs-meta{color:#8b93a4;font-style:italic}
+.hljs-attr,.hljs-attribute,.hljs-variable,.hljs-property{color:#7c3aed}
+.hljs-title,.hljs-name,.hljs-section,.hljs-tag{color:#0e7490}
+.hljs-deletion{color:#c62828}.hljs-addition{color:#1f8a5b}
 @media print{
   @page{size:A4;margin:16mm 12mm}
   body{margin:0;background:#fff} a{color:#000}
