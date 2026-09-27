@@ -167,3 +167,56 @@ describe('採番と通し番号', () => {
     expect(ids(m)).toEqual(['D', 'B', 'A', 'C'])
   })
 })
+
+describe('記録とブロックの移動', () => {
+  const two = (): Manifest =>
+    run(
+      base(),
+      {
+        t: 'addEntry',
+        tcId: 'A',
+        blocks: [img('1.png'), { type: 'note', text: 'n1' }, { type: 'note', text: 'n2' }]
+      }, // no1
+      { t: 'addEntry', tcId: 'A', blocks: [{ type: 'note', text: 'x' }] }, // no2
+      { t: 'addEntry', tcId: 'B', blocks: [{ type: 'note', text: 'y' }] } // no3
+    )
+  const texts = (m: Manifest, tc: string, no: number): string[] =>
+    m.testcases
+      .find((t) => t.id === tc)!
+      .entries.find((e) => e.no === no)!
+      .blocks.map((b) => (b.type === 'note' ? b.text : b.type))
+
+  it('moveEntryTo: 同じテストケース内で並べ替え、別のテストケースへも移せる', () => {
+    let m = run(two(), { t: 'moveEntryTo', no: 2, toTcId: 'A', beforeNo: 1 })
+    expect(m.testcases[0].entries.map((e) => e.no)).toEqual([2, 1])
+    m = run(m, { t: 'moveEntryTo', no: 1, toTcId: 'B', beforeNo: null })
+    expect(m.testcases[0].entries.map((e) => e.no)).toEqual([2])
+    expect(m.testcases[1].entries.map((e) => e.no)).toEqual([3, 1])
+    m = run(m, { t: 'moveEntryTo', no: 1, toTcId: 'B', beforeNo: 1 }) // 自分の前 = 何もしない
+    expect(m.testcases[1].entries.map((e) => e.no)).toEqual([3, 1])
+  })
+
+  it('moveBlockTo: 同じ記録内では、前へも後ろへも動かせる', () => {
+    let m = run(two(), { t: 'moveBlockTo', no: 1, index: 0, toNo: 1, toIndex: 3 }) // 末尾へ
+    expect(texts(m, 'A', 1)).toEqual(['n1', 'n2', 'image'])
+    m = run(m, { t: 'moveBlockTo', no: 1, index: 2, toNo: 1, toIndex: 0 }) // 先頭へ
+    expect(texts(m, 'A', 1)).toEqual(['image', 'n1', 'n2'])
+  })
+
+  it('moveBlockTo: 記録をまたぐ。元の記録が空になったらその記録は消え、画像は消えない', () => {
+    let m = run(two(), { t: 'moveBlockTo', no: 1, index: 1, toNo: 3, toIndex: 0 })
+    expect(texts(m, 'B', 3)).toEqual(['n1', 'y'])
+    const r = apply(m, { t: 'moveBlockTo', no: 2, index: 0, toNo: 1, toIndex: 0 })
+    expect(r.manifest.testcases[0].entries.map((e) => e.no)).toEqual([1]) // no2 は空になり消える
+    expect(r.removedImages).toEqual([])
+    m = run(m, { t: 'moveBlockTo', no: 1, index: 0, toNo: 3, toIndex: 9 }) // 範囲外は末尾に丸める
+    expect(texts(m, 'B', 3)).toEqual(['n1', 'y', 'image'])
+  })
+
+  it('moveBlockBy: 記録内で上下に入れ替え、端では何もしない', () => {
+    let m = run(two(), { t: 'moveBlockBy', no: 1, index: 1, delta: 1 })
+    expect(texts(m, 'A', 1)).toEqual(['image', 'n2', 'n1'])
+    m = run(m, { t: 'moveBlockBy', no: 1, index: 2, delta: 1 })
+    expect(texts(m, 'A', 1)).toEqual(['image', 'n2', 'n1'])
+  })
+})

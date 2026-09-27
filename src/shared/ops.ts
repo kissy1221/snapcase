@@ -18,6 +18,11 @@ export type Op =
   | { t: 'setEntryComment'; tcId: string; no: number; comment: string }
   | { t: 'deleteEntry'; tcId: string; no: number }
   | { t: 'moveEntry'; tcId: string; no: number; delta: -1 | 1 }
+  /** 記録を、同じ・別のテストケースの beforeNo の直前へ(null は末尾)。ドラッグ＆ドロップ用。 */
+  | { t: 'moveEntryTo'; no: number; toTcId: string; beforeNo: number | null }
+  /** ブロックを、記録 toNo の toIndex 番目の直前へ(記録をまたいでも可)。元の記録が空になれば消える。 */
+  | { t: 'moveBlockTo'; no: number; index: number; toNo: number; toIndex: number }
+  | { t: 'moveBlockBy'; no: number; index: number; delta: -1 | 1 }
   | { t: 'addBlock'; tcId: string; no: number; block: Block }
   | { t: 'updateBlock'; tcId: string; no: number; index: number; block: Block }
   | { t: 'deleteBlock'; tcId: string; no: number; index: number }
@@ -143,6 +148,12 @@ const now = (): string => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
 }
 
+/** 記録の番号から、それを持つテストケースの id を引く。 */
+const findTc = (m: Manifest, no: number): [string, number] => [
+  m.testcases.find((t) => t.entries.some((e) => e.no === no))?.id ?? '',
+  no
+]
+
 /** 元の manifest は変更せず、新しい manifest を返す。対象が無い操作は何もしない。 */
 export function apply(src: Manifest, op: Op): Applied {
   const m: Manifest = structuredClone(src)
@@ -247,6 +258,35 @@ export function apply(src: Manifest, op: Op): Applied {
     case 'moveEntry': {
       const h = entryOf(op.tcId, op.no)
       if (h) swap(h.tc.entries, h.i, h.i + op.delta)
+      break
+    }
+    case 'moveEntryTo': {
+      const from = m.testcases.find((t) => t.entries.some((e) => e.no === op.no))
+      const to = tcOf(op.toTcId)
+      if (!from || !to || op.beforeNo === op.no) break
+      const [e] = from.entries.splice(
+        from.entries.findIndex((x) => x.no === op.no),
+        1
+      )
+      const at = op.beforeNo === null ? -1 : to.entries.findIndex((x) => x.no === op.beforeNo)
+      to.entries.splice(at < 0 ? to.entries.length : at, 0, e)
+      break
+    }
+    case 'moveBlockTo': {
+      const all = m.testcases.flatMap((t) => t.entries.map((e) => ({ t, e })))
+      const src = all.find((x) => x.e.no === op.no)
+      const dst = all.find((x) => x.e.no === op.toNo)
+      if (!src || !dst || op.index < 0 || op.index >= src.e.blocks.length) break
+      let at = Math.max(0, Math.min(op.toIndex, dst.e.blocks.length))
+      if (src.e === dst.e && op.index < at) at-- // 自分を抜いた分、挿入位置が1つ前へ詰まる
+      const [b] = src.e.blocks.splice(op.index, 1)
+      dst.e.blocks.splice(at, 0, b)
+      if (!src.e.blocks.length) src.t.entries.splice(src.t.entries.indexOf(src.e), 1)
+      break
+    }
+    case 'moveBlockBy': {
+      const h = entryOf(...(findTc(m, op.no) as [string, number]))
+      if (h) swap(h.tc.entries[h.i].blocks, op.index, op.index + op.delta)
       break
     }
     case 'addBlock': {
