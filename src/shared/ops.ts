@@ -14,6 +14,10 @@ export type Op =
   | { t: 'moveGroup'; name: string; delta: -1 | 1 }
   /** フォルダを beforeName の直前へ(null は末尾)。ドラッグ＆ドロップ用。 */
   | { t: 'moveGroupTo'; name: string; beforeName: string | null }
+  /** フォルダに属する全テストケースの group をまとめて書き換える。既存フォルダと同名になれば自然に統合される。 */
+  | { t: 'renameGroup'; from: string; to: string }
+  /** フォルダに属する全テストケースを未分類へ移す(テストケース自体は消さない)。 */
+  | { t: 'deleteGroup'; name: string }
   | { t: 'addEntry'; tcId: string; blocks: Block[]; comment?: string; time?: string }
   | { t: 'setEntryComment'; tcId: string; no: number; comment: string }
   | { t: 'deleteEntry'; tcId: string; no: number }
@@ -226,6 +230,17 @@ export function apply(src: Manifest, op: Op): Applied {
         buckets.set(k, [...(buckets.get(k) ?? []), tc])
       }
       m.testcases = groups.flatMap((g) => buckets.get(g) ?? [])
+      break
+    }
+    case 'renameGroup': {
+      const from = op.from === GROUP_NONE ? '' : op.from.trim()
+      const to = op.to.trim()
+      for (const tc of m.testcases) if (groupOf(tc) === from) tc.group = to
+      break
+    }
+    case 'deleteGroup': {
+      const name = op.name === GROUP_NONE ? '' : op.name.trim()
+      for (const tc of m.testcases) if (groupOf(tc) === name) tc.group = ''
       break
     }
     case 'addEntry': {

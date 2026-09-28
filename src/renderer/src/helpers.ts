@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { GROUP_NONE } from '../../shared/constants'
 import { nextTcId, orderedGroups } from '../../shared/ops'
 import type { Manifest, Result, TestCase } from '../../shared/types'
 import { OVERVIEW, confirmAsk, getManifest, getSelection, select, toast } from './store'
@@ -101,6 +102,28 @@ export async function deleteTestCase(id: string): Promise<void> {
   select(OVERVIEW)
   void window.api.apply({ t: 'deleteTestCase', id })
   undoToast(`${id} を削除しました`)
+}
+
+/** フォルダ名をまとめて変える。属する全テストケースの group を書き換え、既存フォルダと同名なら自然に統合される。 */
+export async function renameGroup(name: string): Promise<void> {
+  const to = window.prompt('新しいフォルダ名', name === GROUP_NONE ? '' : name)
+  const trimmed = to?.trim()
+  if (!trimmed || trimmed === name) return
+  await window.api.apply({ t: 'renameGroup', from: name, to: trimmed })
+  undoToast(`「${name}」を「${trimmed}」に変更しました`)
+}
+
+/** フォルダを削除する。属するテストケースは未分類に移すだけで、テストケース自体は消さない。 */
+export async function deleteGroup(m: Manifest, name: string): Promise<void> {
+  const n = orderedGroups(m).find((g) => g.name === name)?.indexes.length ?? 0
+  const ok = await confirmAsk({
+    title: `「${name}」を削除しますか？`,
+    message: `属する${n}件のテストケースを未分類に移します。テストケース自体は削除されません。削除したあとも、⌘Z（Ctrl+Z）か「元に戻す」で戻せます。`,
+    okLabel: '削除する'
+  })
+  if (!ok) return
+  await window.api.apply({ t: 'deleteGroup', name })
+  undoToast(`「${name}」を削除しました`)
 }
 
 /** テストケースを複製する。記録(画像)は複製せず、記載欄だけを写す。 */

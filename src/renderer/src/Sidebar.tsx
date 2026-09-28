@@ -6,9 +6,11 @@ import {
   COLOR,
   RESULT_CLASS,
   addTestCase,
+  deleteGroup,
   deleteTestCase,
   duplicateTestCase,
-  importTestCases
+  importTestCases,
+  renameGroup
 } from './helpers'
 import { Menu, type MenuItem } from './Menu'
 import { OVERVIEW, TABLE, select, useSelection } from './store'
@@ -25,6 +27,11 @@ export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
     e.preventDefault()
     run(e.key === 'ArrowUp' ? -1 : 1)
   }
+
+  const groupMenu = (name: string): MenuItem[] => [
+    { label: '名前を変更', run: () => renameGroup(name) },
+    { label: '削除', danger: true, disabled: name === GROUP_NONE, run: () => deleteGroup(m, name) }
+  ]
 
   const tcMenu = (tc: TestCase, i: number, count: number, group: string): MenuItem[] => [
     { label: '複製', run: () => duplicateTestCase(m, tc) },
@@ -97,6 +104,12 @@ export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
                 <span className="count num">
                   {done} / {tcs.length}
                 </span>
+                <Menu
+                  className="end"
+                  label={`${name} のメニュー`}
+                  trigger="⋯"
+                  items={groupMenu(name)}
+                />
               </div>
               {tcs.map((tc, i) => (
                 <div
