@@ -18,7 +18,7 @@ import Palette, { type Command } from './Palette'
 import SettingsDialog from './Settings'
 import Sidebar from './Sidebar'
 import TableView from './TableView'
-import { OVERVIEW, TABLE, isPage, select, useSelection } from './store'
+import { OVERVIEW, TABLE, isPage, scrollToEntry, select, useSelection } from './store'
 import TestCasePage from './TestCasePage'
 import { Toaster } from './ui'
 import './assets/workspace.css'
@@ -109,10 +109,26 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
     for (const g of orderedGroups(m))
       for (const i of g.indexes) {
         const t = m.testcases[i]
+        const extra: NonNullable<Command['extra']> = [
+          { text: t.precondition },
+          { text: t.steps },
+          { text: t.expected },
+          { text: t.note }
+        ].filter((x) => x.text)
+        for (const e of t.entries) {
+          const jump = (): void => {
+            select(t.id)
+            scrollToEntry(e.no)
+          }
+          if (e.comment) extra.push({ text: e.comment, run: jump })
+          for (const b of e.blocks)
+            if (b.type === 'note' && b.text) extra.push({ text: b.text, run: jump })
+        }
         list.push({
           id: 'tc' + t.id,
           label: `${t.id} ${t.title}（${g.name}）`,
-          run: () => select(t.id)
+          run: () => select(t.id),
+          extra
         })
       }
     return list

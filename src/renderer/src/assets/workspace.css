@@ -1013,6 +1013,12 @@ input.line {
   font-size: 13px;
   color: var(--ink3);
 }
+.palette-list .excerpt {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ink3);
+}
 
 /* 設定 */
 .form input.hotkey {

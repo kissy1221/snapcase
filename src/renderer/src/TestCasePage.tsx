@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CATEGORIES, RESULTS } from '../../shared/constants'
 import type { Block, Manifest, TestCase } from '../../shared/types'
 import { BLOCK_LABEL, TEXT_BLOCKS, type TextBlockType } from './blockMeta'
 import { BlockDialog, BlockView, ImageViewer } from './Blocks'
 import { RESULT_CLASS, deleteTestCase, setResult, undoToast } from './helpers'
 import { Menu, type MenuItem } from './Menu'
+import { clearScrollTarget, useScrollTarget } from './store'
 import { AutoLine, AutoText } from './ui'
 
 type ImageBlock = Extract<Block, { type: 'image' }>
@@ -21,6 +22,14 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
   const groups = [...new Set(m.testcases.map((t) => t.group).filter(Boolean))]
   const others = m.testcases.filter((t) => t.id !== tc.id)
   const lastEntry = tc.entries.length - 1
+  const scrollTarget = useScrollTarget()
+
+  // パレットで記録の一致を選んだときは、その記録までスクロールする。
+  useEffect(() => {
+    if (scrollTarget == null || !tc.entries.some((e) => e.no === scrollTarget)) return
+    document.getElementById(`entry-${scrollTarget}`)?.scrollIntoView({ block: 'center' })
+    clearScrollTarget()
+  }, [scrollTarget, tc])
 
   const submit = (b: Block): void => {
     if (!editing) return
@@ -212,6 +221,7 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
 
       {tc.entries.map((e, i) => (
         <section
+          id={`entry-${e.no}`}
           className={
             'entry' +
             (over === 'e' + e.no ? ' drop-before' : '') +

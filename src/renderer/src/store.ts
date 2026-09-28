@@ -40,6 +40,12 @@ export const select = (v: string): void => {
 }
 export const getSelection = selStore.get
 
+/** パレットで記録(手順のコメント・メモ)に一致して選んだとき、開いた先でスクロールする記録番号。 */
+const scrollTargetStore = createStore<number | null>(null)
+export const scrollToEntry = (no: number): void => scrollTargetStore.set(no)
+export const useScrollTarget = scrollTargetStore.use
+export const clearScrollTarget = (): void => scrollTargetStore.set(null)
+
 export interface Toast {
   msg: string
   action?: { label: string; run: () => void }

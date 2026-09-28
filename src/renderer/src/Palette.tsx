@@ -5,6 +5,30 @@ export interface Command {
   id: string
   label: string
   run: () => void
+  /** 項目名以外の検索対象(手順・記録のコメントなど)。一致すると抜粋を出し、選ぶと run の代わりに使う。 */
+  extra?: { text: string; run?: () => void }[]
+}
+
+interface Shown {
+  id: string
+  label: string
+  excerpt: string | null
+  run: () => void
+}
+
+/** 一致箇所の前後を切り出す。行頭・行末なら省略記号は付けない。 */
+function excerptOf(text: string, words: string[]): string {
+  const lower = text.toLowerCase()
+  let at = -1
+  for (const w of words) {
+    const i = lower.indexOf(w)
+    if (i >= 0 && (at < 0 || i < at)) at = i
+  }
+  if (at < 0) at = 0
+  const start = Math.max(0, at - 20)
+  const end = Math.min(text.length, at + 40)
+  const body = text.slice(start, end).replace(/\s+/g, ' ').trim()
+  return (start > 0 ? '…' : '') + body + (end < text.length ? '…' : '')
 }
 
 /** ⌘K / Ctrl+K のコマンドパレット。入力で絞り込み、↑↓ で選び、Enter で実行する。 */
@@ -19,11 +43,30 @@ export default function Palette({
   const [at, setAt] = useState(0)
   const shown = useMemo(() => {
     const words = q.toLowerCase().split(/\s+/).filter(Boolean)
-    return commands.filter((c) => words.every((w) => c.label.toLowerCase().includes(w)))
+    const out: Shown[] = []
+    for (const c of commands) {
+      const label = c.label.toLowerCase()
+      if (words.every((w) => label.includes(w))) {
+        out.push({ id: c.id, label: c.label, excerpt: null, run: c.run })
+        continue
+      }
+      const hit = c.extra?.find((x) => {
+        const text = x.text.toLowerCase()
+        return words.every((w) => label.includes(w) || text.includes(w))
+      })
+      if (hit)
+        out.push({
+          id: c.id,
+          label: c.label,
+          excerpt: excerptOf(hit.text, words),
+          run: hit.run ?? c.run
+        })
+    }
+    return out
   }, [q, commands])
   const cur = Math.min(at, Math.max(0, shown.length - 1))
 
-  const run = (c?: Command): void => {
+  const run = (c?: Shown): void => {
     if (!c) return
     onClose()
     c.run()
@@ -61,6 +104,7 @@ export default function Palette({
               onClick={() => run(c)}
             >
               {c.label}
+              {c.excerpt && <span className="excerpt">{c.excerpt}</span>}
             </button>
           </li>
         ))}
