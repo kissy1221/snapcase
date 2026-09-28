@@ -55,6 +55,11 @@ export interface Api {
   renameSession(from: string, to: string): Promise<{ error: string } | { name: string }>
   /** ごみ箱へ移す。開いているセッションは対象にできない。 */
   deleteSession(name: string): Promise<{ error: string } | undefined>
+  /** 既存セッションのテストケース定義だけを引き継いだ新しいセッションを作って開く(判定・記録・実施情報は初期化)。 */
+  duplicateSession(
+    sourceName: string,
+    newName: string
+  ): Promise<{ manifest: Manifest } | { error: string }>
   closeSession(): Promise<void>
   apply(op: Op): Promise<void>
   /** 1つ前の状態に戻す / やり直す。動かせたときだけ true。 */

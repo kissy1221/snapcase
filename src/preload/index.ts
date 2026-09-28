@@ -13,6 +13,8 @@ const api: Api = {
   openSession: (name) => ipcRenderer.invoke('session:open', name),
   renameSession: (from, to) => ipcRenderer.invoke('session:rename', from, to),
   deleteSession: (name) => ipcRenderer.invoke('session:delete', name),
+  duplicateSession: (sourceName, newName) =>
+    ipcRenderer.invoke('session:duplicate', sourceName, newName),
   closeSession: () => ipcRenderer.invoke('session:close'),
   apply: (op) => ipcRenderer.invoke('session:apply', op),
   undo: () => ipcRenderer.invoke('session:undo'),

@@ -133,6 +133,40 @@ export async function renameSession(
   return { name }
 }
 
+/** 既存セッションのテストケース定義だけを引き継いだ新しいセッションを作る(再テスト用)。
+ * 判定・記録(entries)・実施情報は addTestCases / 新規セッションの既定値でリセットされる。 */
+export async function duplicateSession(
+  root: string,
+  sourceName: string,
+  newName: string
+): Promise<Session> {
+  let src: Manifest
+  try {
+    const raw = await readFile(join(root, sanitizeName(sourceName), 'manifest.json'), 'utf-8')
+    src = normalize(JSON.parse(raw), sourceName)
+  } catch {
+    throw new Error('元セッションを読み込めませんでした')
+  }
+  const name = sanitizeName(newName)
+  if (name && (await stat(join(root, name)).catch(() => null)))
+    throw new Error('同じ名前のセッションがすでにあります')
+  const s = await Session.open(root, newName)
+  await s.apply({
+    t: 'addTestCases',
+    tcs: src.testcases.map((tc) => ({
+      id: tc.id,
+      title: tc.title,
+      group: tc.group,
+      category: tc.category,
+      precondition: tc.precondition,
+      steps: tc.steps,
+      expected: tc.expected,
+      note: tc.note
+    }))
+  })
+  return s
+}
+
 export async function listSessions(root: string): Promise<SessionSummary[]> {
   await mkdir(root, { recursive: true })
   const out: SessionSummary[] = []
