@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { RESULTS } from '../../shared/constants'
 import { orderedGroups } from '../../shared/ops'
 import type { Manifest, TestCase } from '../../shared/types'
@@ -23,6 +23,8 @@ export default function Compact({
   onShoot: () => void
 }): React.JSX.Element {
   const [pinned, setPinned] = useState(false)
+  // 通常表示に戻ると pinned は初期化されるが、実際の固定は解除されないためここで合わせる。
+  useEffect(() => () => window.api.setPinned(false), [])
   const [fieldsOpen, setFieldsOpen] = useState(true)
   const order = orderedGroups(m).flatMap((g) => g.indexes.map((i) => m.testcases[i]))
   const at = order.findIndex((t) => t.id === tcId)
