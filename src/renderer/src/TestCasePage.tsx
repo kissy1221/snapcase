@@ -3,7 +3,7 @@ import { CATEGORIES, RESULTS } from '../../shared/constants'
 import type { Block, Manifest, TestCase } from '../../shared/types'
 import { BLOCK_LABEL, TEXT_BLOCKS, type TextBlockType } from './blockMeta'
 import { BlockDialog, BlockView, ImageViewer } from './Blocks'
-import { RESULT_CLASS, deleteTestCase, undoToast } from './helpers'
+import { RESULT_CLASS, deleteTestCase, setResult, undoToast } from './helpers'
 import { Menu, type MenuItem } from './Menu'
 import { AutoLine, AutoText } from './ui'
 
@@ -169,7 +169,7 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
               role="radio"
               aria-checked={tc.result === r}
               className={tc.result === r ? 'on ' + RESULT_CLASS[r] : ''}
-              onClick={() => patch({ result: r })}
+              onClick={() => setResult(m, tc, r)}
             >
               {r}
             </button>

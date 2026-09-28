@@ -17,6 +17,8 @@ export interface Settings {
   theme: Theme
   /** ウィンドウの鏡面(すりガラス)の度合い。0 で無効、100 で最も透ける。 */
   glass: number
+  /** 判定を付けたあと、並び順で次の未実施のテストケースへ自動的に移る。 */
+  autoAdvance: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -25,7 +27,8 @@ export const DEFAULT_SETTINGS: Settings = {
   dataDir: '',
   exportOnClose: [],
   theme: 'system',
-  glass: 55
+  glass: 55,
+  autoAdvance: false
 }
 
 export interface SessionSummary {
