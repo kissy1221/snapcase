@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { EditorItem } from '../../shared/api'
-import { COLORS, bake, render, sizes, type Item, type Rect } from './annotate'
+import {
+  COLORS,
+  THICKNESSES,
+  bake,
+  render,
+  sizes,
+  type Item,
+  type Rect,
+  type Thickness
+} from './annotate'
 import './assets/editor.css'
 
 type Tool = 'rect' | 'callout' | 'text' | 'mask' | 'crop'
@@ -34,6 +43,12 @@ interface Doc {
 type Draft = { tool: Tool; x0: number; y0: number; x1: number; y1: number }
 type Input = { kind: 'callout' | 'text'; x: number; y: number; tx: number; ty: number }
 
+const THICKNESS_KEY = 'ed-thickness'
+const savedThickness = (): Thickness => {
+  const v = localStorage.getItem(THICKNESS_KEY)
+  return v === 'thin' || v === 'thick' ? v : 'std'
+}
+
 const norm = (d: Draft): Rect => ({
   x: Math.min(d.x0, d.x1),
   y: Math.min(d.y0, d.y1),
@@ -61,6 +76,7 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
   const [past, setPast] = useState<Doc[]>([])
   const [tool, setTool] = useState<Tool>('rect')
   const [color, setColor] = useState(COLORS[0])
+  const [thickness, setThicknessState] = useState<Thickness>(savedThickness)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [input, setInput] = useState<Input | null>(null)
   const [comment, setComment] = useState('')
@@ -81,7 +97,11 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
     () => doc.crop ?? { x: 0, y: 0, w: img?.naturalWidth ?? 1, h: img?.naturalHeight ?? 1 },
     [doc.crop, img]
   )
-  const sz = sizes(img?.naturalWidth ?? 1000)
+  const sz = sizes(img?.naturalWidth ?? 1000, thickness)
+  const setThickness = (t: Thickness): void => {
+    setThicknessState(t)
+    localStorage.setItem(THICKNESS_KEY, t)
+  }
 
   const commit = useCallback(
     (next: Doc) => {
@@ -274,6 +294,17 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
               aria-pressed={color === c}
               onClick={() => setColor(c)}
             />
+          ))}
+          <span className="sep" />
+          {THICKNESSES.map((t) => (
+            <button
+              key={t.id}
+              className={thickness === t.id ? 'on' : ''}
+              aria-pressed={thickness === t.id}
+              onClick={() => setThickness(t.id)}
+            >
+              {t.label}
+            </button>
           ))}
           <span className="sep" />
           <button onClick={undo} disabled={!past.length} aria-label="元に戻す">
