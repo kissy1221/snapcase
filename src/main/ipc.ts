@@ -27,7 +27,7 @@ import { getSettings, saveSettings } from './settings'
 import type { ExportFormat, Settings } from '../shared/api'
 import { exportSession, scheduleLiveOutputs } from './export'
 import { loadTestCases } from './import'
-import { listSessions, renameSession, Session } from './session'
+import { duplicateSession, listSessions, renameSession, Session } from './session'
 import { broadcast, sendToast, state, targetTestCase } from './state'
 
 // SNAPCASE_DATA_DIR は自動テスト用。実データを汚さないために保存先を差し替える。
@@ -148,6 +148,18 @@ export function registerIpc(): void {
       return undefined
     } catch (e) {
       return { error: e instanceof Error ? e.message : 'ごみ箱に移動できませんでした' }
+    }
+  })
+  ipcMain.handle('session:duplicate', async (_e, sourceName: string, newName: string) => {
+    try {
+      state.session = await duplicateSession(root(), sourceName, newName)
+      const opened = state.session
+      opened.onSaved = () => scheduleLiveOutputs(opened)
+      state.selectedTc = null
+      broadcast()
+      return { manifest: state.session.manifest }
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : '複製できませんでした。' }
     }
   })
   ipcMain.handle('session:close', async () => {

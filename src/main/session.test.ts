@@ -3,7 +3,7 @@ import { existsSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { listSessions, renameSession, sanitizeName, Session } from './session'
+import { duplicateSession, listSessions, renameSession, sanitizeName, Session } from './session'
 
 let root: string
 beforeEach(async () => {
@@ -82,6 +82,58 @@ describe('Session', () => {
 
   it('空のセッション名は拒否する', async () => {
     await expect(Session.open(root, '  ')).rejects.toThrow()
+  })
+})
+
+describe('duplicateSession', () => {
+  it('テストケースの記載欄だけを引き継ぎ、判定・記録・実施情報は初期化する', async () => {
+    const src = await Session.open(root, 'src')
+    await src.apply({
+      t: 'addTestCase',
+      tc: {
+        id: 'A-1',
+        title: 'ログイン',
+        group: '認証',
+        category: '正常系',
+        precondition: '登録済み',
+        steps: '入力する',
+        expected: '成功する',
+        note: 'メモ',
+        result: 'NG'
+      }
+    })
+    await src.apply({
+      t: 'addEntry',
+      tcId: 'A-1',
+      blocks: [{ type: 'note', text: 'x' }]
+    })
+    await src.apply({ t: 'setMeta', meta: { tester: '他人', build: '1.0' } })
+
+    const copy = await duplicateSession(root, 'src', 'copy')
+    expect(copy.manifest.session).toBe('copy')
+    expect(copy.manifest.testcases).toEqual([
+      {
+        id: 'A-1',
+        title: 'ログイン',
+        group: '認証',
+        category: '正常系',
+        precondition: '登録済み',
+        steps: '入力する',
+        expected: '成功する',
+        note: 'メモ',
+        result: '未実施',
+        entries: []
+      }
+    ])
+    expect(copy.manifest.meta.tester).not.toBe('他人')
+    expect(copy.manifest.meta.build).toBeUndefined()
+    expect((await Session.open(root, 'src')).manifest.testcases[0].result).toBe('NG') // 元は変えない
+  })
+
+  it('同名のセッションがある・元が無いときはエラーにする', async () => {
+    await Session.open(root, 'src')
+    await expect(duplicateSession(root, 'src', 'src')).rejects.toThrow('すでにあります')
+    await expect(duplicateSession(root, 'none', 'x')).rejects.toThrow('読み込めません')
   })
 })
 

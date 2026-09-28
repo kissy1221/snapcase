@@ -99,11 +99,27 @@ export default function Home(): React.JSX.Element {
   const [error, setError] = useState('')
   const [settings, setSettings] = useState(false)
   const [renaming, setRenaming] = useState<SessionSummary | null>(null)
+  const [dup, setDup] = useState<SessionSummary | null>(null)
+  const [dupName, setDupName] = useState('')
+  const [dupError, setDupError] = useState('')
 
   const refresh = (): void => {
     window.api.listSessions().then(setSessions)
   }
   useEffect(refresh, [])
+
+  const startDuplicate = (s: SessionSummary): void => {
+    setDup(s)
+    setDupName(`${s.name} のコピー`)
+    setDupError('')
+  }
+
+  // 成功すると main が新しいセッションを開くので、Home は Workspace に置き換わる。
+  const duplicate = async (): Promise<void> => {
+    if (!dup) return
+    const r = await window.api.duplicateSession(dup.name, dupName)
+    if ('error' in r) setDupError(r.error)
+  }
 
   const open = (n: string): void => {
     setError('')
@@ -128,6 +144,7 @@ export default function Home(): React.JSX.Element {
 
   const sessionMenu = (s: SessionSummary): MenuItem[] => [
     { label: '名前を変更', run: () => setRenaming(s) },
+    { label: 'このケースで新規作成', run: () => startDuplicate(s) },
     { label: '削除', danger: true, run: () => del(s) }
   ]
 
@@ -185,6 +202,32 @@ export default function Home(): React.JSX.Element {
           </li>
         ))}
       </ul>
+      {dup && (
+        <Dialog title="このケースで新規作成" onClose={() => setDup(null)}>
+          <form
+            className="new"
+            onSubmit={(e) => {
+              e.preventDefault()
+              void duplicate()
+            }}
+          >
+            <input
+              value={dupName}
+              onChange={(e) => setDupName(e.target.value)}
+              aria-label="新しいセッション名"
+              autoFocus
+            />
+            <button type="submit" disabled={!dupName.trim()}>
+              作成する
+            </button>
+          </form>
+          {dupError && (
+            <p className="error" role="alert">
+              {dupError}
+            </p>
+          )}
+        </Dialog>
+      )}
       {settings && <SettingsDialog onClose={() => setSettings(false)} />}
       {renaming && (
         <RenameDialog s={renaming} onClose={() => setRenaming(null)} onRenamed={refresh} />
