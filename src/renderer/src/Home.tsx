@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import type { SessionSummary } from '../../shared/api'
+import { Menu, type MenuItem } from './Menu'
 import SettingsDialog from './Settings'
-import { Toaster } from './ui'
+import { confirmAsk, toast } from './store'
+import { Dialog, Toaster } from './ui'
 import './assets/home.css'
 
 const JUDGE = [
@@ -27,15 +29,81 @@ function Progress({ s }: { s: SessionSummary }): React.JSX.Element {
   )
 }
 
+/** 名前を変えるダイアログ。既存の名前と重なる・開いている場合は main 側が断り、その旨を出す。 */
+function RenameDialog({
+  s,
+  onClose,
+  onRenamed
+}: {
+  s: SessionSummary
+  onClose: () => void
+  onRenamed: () => void
+}): React.JSX.Element {
+  const [name, setName] = useState(s.name)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const run = async (): Promise<void> => {
+    const next = name.trim()
+    if (!next || next === s.name) return onClose()
+    setBusy(true)
+    const r = await window.api.renameSession(s.name, next)
+    if ('error' in r) {
+      setBusy(false)
+      setError(r.error)
+      return
+    }
+    onClose()
+    onRenamed()
+  }
+
+  return (
+    <Dialog title="名前を変更" onClose={onClose}>
+      <form
+        className="form"
+        onSubmit={(e) => {
+          e.preventDefault()
+          run()
+        }}
+      >
+        <label>
+          セッション名
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            aria-label="セッション名"
+            autoFocus
+          />
+        </label>
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="actions">
+          <button type="button" onClick={onClose} disabled={busy}>
+            キャンセル
+          </button>
+          <button type="submit" className="primary" disabled={busy || !name.trim()}>
+            変更する
+          </button>
+        </div>
+      </form>
+    </Dialog>
+  )
+}
+
 export default function Home(): React.JSX.Element {
   const [sessions, setSessions] = useState<SessionSummary[] | null>(null)
   const [name, setName] = useState('')
   const [error, setError] = useState('')
   const [settings, setSettings] = useState(false)
+  const [renaming, setRenaming] = useState<SessionSummary | null>(null)
 
-  useEffect(() => {
+  const refresh = (): void => {
     window.api.listSessions().then(setSessions)
-  }, [])
+  }
+  useEffect(refresh, [])
 
   const open = (n: string): void => {
     setError('')
@@ -45,6 +113,23 @@ export default function Home(): React.JSX.Element {
         setError(e.message.replace(/^Error invoking remote method '.*?': Error: /, ''))
       )
   }
+
+  const del = async (s: SessionSummary): Promise<void> => {
+    const ok = await confirmAsk({
+      title: `${s.name} を削除しますか？`,
+      message: 'ごみ箱に移動します。元に戻すには OS のごみ箱から戻してください。',
+      okLabel: '削除する'
+    })
+    if (!ok) return
+    const r = await window.api.deleteSession(s.name)
+    if (r && 'error' in r) return toast(`削除できませんでした: ${r.error}`)
+    refresh()
+  }
+
+  const sessionMenu = (s: SessionSummary): MenuItem[] => [
+    { label: '名前を変更', run: () => setRenaming(s) },
+    { label: '削除', danger: true, run: () => del(s) }
+  ]
 
   return (
     <main className="home">
@@ -91,10 +176,19 @@ export default function Home(): React.JSX.Element {
               </span>
               <Progress s={s} />
             </button>
+            <Menu
+              className="end"
+              label={`${s.name} のメニュー`}
+              trigger="⋯"
+              items={sessionMenu(s)}
+            />
           </li>
         ))}
       </ul>
       {settings && <SettingsDialog onClose={() => setSettings(false)} />}
+      {renaming && (
+        <RenameDialog s={renaming} onClose={() => setRenaming(null)} onRenamed={refresh} />
+      )}
       <Toaster />
     </main>
   )

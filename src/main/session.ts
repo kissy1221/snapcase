@@ -110,6 +110,29 @@ export class Session {
   }
 }
 
+/** 名前を変える。フォルダ名と manifest の session を揃え、同じ名前が既にあれば変えない。 */
+export async function renameSession(
+  root: string,
+  from: string,
+  to: string
+): Promise<{ error: string } | { name: string }> {
+  const name = sanitizeName(to)
+  if (!name) return { error: 'セッション名を入力してください' }
+  if (name === from) return { name }
+  const dirs = await readdir(root, { withFileTypes: true }).catch(() => [])
+  if (dirs.some((d) => d.isDirectory() && d.name === name))
+    return { error: '同じ名前のセッションがあります' }
+  await rename(join(root, from), join(root, name))
+  // 保存と同じく、一時ファイル経由で manifest を置き換える。
+  const manifestPath = join(root, name, 'manifest.json')
+  const raw = JSON.parse(await readFile(manifestPath, 'utf-8'))
+  raw.session = name
+  const tmp = manifestPath + '.tmp'
+  await writeFile(tmp, JSON.stringify(raw, null, 2), 'utf-8')
+  await rename(tmp, manifestPath)
+  return { name }
+}
+
 export async function listSessions(root: string): Promise<SessionSummary[]> {
   await mkdir(root, { recursive: true })
   const out: SessionSummary[] = []

@@ -3,7 +3,7 @@ import { existsSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { listSessions, sanitizeName, Session } from './session'
+import { listSessions, renameSession, sanitizeName, Session } from './session'
 
 let root: string
 beforeEach(async () => {
@@ -96,5 +96,27 @@ describe('listSessions', () => {
     const list = await listSessions(root)
     expect(list.map((x) => x.name)).toEqual(['new', 'old'])
     expect(list[0]).toMatchObject({ total: 1, counts: { NG: 1, OK: 0 }, entries: 0 })
+  })
+})
+
+describe('renameSession', () => {
+  it('フォルダ名と manifest の session を揃えて変える。開き直しても新しい名前のまま', async () => {
+    const s = await Session.open(root, 'before')
+    await s.apply({ t: 'addTestCase', tc: { title: 'ログイン' } })
+    expect(await renameSession(root, 'before', 'after')).toEqual({ name: 'after' })
+    expect(existsSync(join(root, 'before'))).toBe(false)
+    const raw = JSON.parse(await readFile(join(root, 'after', 'manifest.json'), 'utf-8'))
+    expect(raw.session).toBe('after')
+    const again = await Session.open(root, 'after')
+    expect(again.manifest.session).toBe('after')
+    expect(again.manifest.testcases[0].title).toBe('ログイン')
+  })
+
+  it('既存の名前と重なるときは何も変えない。空の名前も断る', async () => {
+    await Session.open(root, 'a')
+    await Session.open(root, 'b')
+    expect(await renameSession(root, 'a', 'b')).toHaveProperty('error')
+    expect(await renameSession(root, 'a', '  ')).toHaveProperty('error')
+    expect((await listSessions(root)).map((x) => x.name).sort()).toEqual(['a', 'b'])
   })
 })

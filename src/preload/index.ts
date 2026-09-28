@@ -11,6 +11,8 @@ const on = <T>(channel: string, cb: (v: T) => void): (() => void) => {
 const api: Api = {
   listSessions: () => ipcRenderer.invoke('sessions:list'),
   openSession: (name) => ipcRenderer.invoke('session:open', name),
+  renameSession: (from, to) => ipcRenderer.invoke('session:rename', from, to),
+  deleteSession: (name) => ipcRenderer.invoke('session:delete', name),
   closeSession: () => ipcRenderer.invoke('session:close'),
   apply: (op) => ipcRenderer.invoke('session:apply', op),
   undo: () => ipcRenderer.invoke('session:undo'),
