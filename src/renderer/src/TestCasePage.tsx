@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { CATEGORIES, RESULTS } from '../../shared/constants'
-import { displayNumbers } from '../../shared/ops'
 import type { Block, Manifest, TestCase } from '../../shared/types'
 import { BLOCK_LABEL, TEXT_BLOCKS, type TextBlockType } from './blockMeta'
 import { BlockDialog, BlockView, ImageViewer } from './Blocks'
@@ -16,7 +15,6 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
   const [viewing, setViewing] = useState<ImageBlock | null>(null)
   const [over, setOver] = useState<string | null>(null) // ドロップ位置の強調(直前に線を出す)
   const [dragging, setDragging] = useState<string | null>(null) // ドラッグ中の要素(薄く表示する)
-  const numbers = displayNumbers(m)
   const apply = window.api.apply
   const patch = (p: Partial<TestCase>): Promise<void> =>
     apply({ t: 'updateTestCase', id: tc.id, patch: p })
@@ -240,7 +238,7 @@ export default function TestCasePage({ m, tc }: { m: Manifest; tc: TestCase }): 
             }}
             onDragEnd={() => setDragging(null)}
           >
-            {numbers.get(e.no)}
+            {i + 1}
           </div>
           <div className="e-body">
             <div className="e-head">

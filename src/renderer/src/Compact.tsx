@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react'
 import { RESULTS } from '../../shared/constants'
 import { orderedGroups } from '../../shared/ops'
-import type { Manifest } from '../../shared/types'
+import type { Manifest, TestCase } from '../../shared/types'
 import { HOTKEY_LABEL, RESULT_CLASS, addTestCase } from './helpers'
 import { select } from './store'
+import { AutoText } from './ui'
 
-/** テスト中に手前に置いておく小さな表示。開いているテストケース、判定、撮影、前後の移動だけ。 */
+const FIELDS = [
+  ['precondition', '前提条件'],
+  ['steps', '手順'],
+  ['expected', '期待結果']
+] as const satisfies ReadonlyArray<[keyof TestCase, string]>
+
+/** テスト中に手前に置いておく小さな表示。開いているテストケース、判定、前提条件・手順・期待結果、撮影、前後の移動。 */
 export default function Compact({
   m,
   tcId,
@@ -18,11 +25,13 @@ export default function Compact({
   const [pinned, setPinned] = useState(false)
   // 通常表示に戻ると pinned は初期化されるが、実際の固定は解除されないためここで合わせる。
   useEffect(() => () => window.api.setPinned(false), [])
+  const [fieldsOpen, setFieldsOpen] = useState(true)
   const order = orderedGroups(m).flatMap((g) => g.indexes.map((i) => m.testcases[i]))
   const at = order.findIndex((t) => t.id === tcId)
   const tc = order[at]
   const images =
     tc?.entries.flatMap((e) => e.blocks.flatMap((b) => (b.type === 'image' ? [b.image] : []))) ?? []
+  const fields = tc ? FIELDS.filter(([k]) => tc[k]) : []
   const move = (d: number): void => select(order[at + d].id)
 
   return (
@@ -69,6 +78,31 @@ export default function Compact({
               </button>
             ))}
           </div>
+          {fields.length > 0 && (
+            <details
+              className="cp-fields"
+              open={fieldsOpen}
+              onToggle={(e) => setFieldsOpen(e.currentTarget.open)}
+            >
+              <summary>詳細</summary>
+              <dl className="props">
+                {fields.map(([k, l]) => (
+                  <div key={k} className="prop">
+                    <dt>{l}</dt>
+                    <dd>
+                      <AutoText
+                        label={l}
+                        value={tc[k]}
+                        onCommit={(v) =>
+                          window.api.apply({ t: 'updateTestCase', id: tc.id, patch: { [k]: v } })
+                        }
+                      />
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+          )}
           <button className="big-shutter" onClick={onShoot}>
             <span className="ring">
               <i />
