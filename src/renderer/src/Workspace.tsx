@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
+import { DEFAULT_SETTINGS } from '../../shared/api'
 import { orderedGroups } from '../../shared/ops'
 import type { Manifest } from '../../shared/types'
 import { Shutter, WindowPicker } from './Capture'
 import Compact from './Compact'
 import ExportDialog from './Export'
 import {
+  IS_MAC,
   addImageFiles,
   addTestCase,
   dropFiles,
@@ -29,8 +31,13 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
   const sel = useSelection()
   const compact = useCompact()
   const [overlay, setOverlay] = useState<Overlay>(null)
+  const [hotkey, setHotkey] = useState(DEFAULT_SETTINGS.hotkey)
   const tc = m.testcases.find((t) => t.id === sel)
   const target = targetOf(m)
+
+  useEffect(() => {
+    window.api.getSettings().then((s) => setHotkey(s.hotkey))
+  }, [])
 
   // 選択中のテストケースが消えた(削除・取り消し)ときは概要に戻す。
   useEffect(() => {
@@ -135,11 +142,15 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
   }, [m, sel])
 
   const close = (): void => setOverlay(null)
+  const closeSettings = (): void => {
+    close()
+    window.api.getSettings().then((s) => setHotkey(s.hotkey))
+  }
   const overlays = (
     <>
       {overlay === 'palette' && <Palette commands={commands} onClose={close} />}
       {overlay === 'export' && <ExportDialog onClose={close} />}
-      {overlay === 'settings' && <SettingsDialog onClose={close} />}
+      {overlay === 'settings' && <SettingsDialog onClose={closeSettings} />}
       {overlay === 'picker' && <WindowPicker onClose={close} />}
       <Toaster />
     </>
@@ -148,7 +159,7 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
   if (compact)
     return (
       <>
-        <Compact m={m} tcId={target} onShoot={() => setOverlay('picker')} />
+        <Compact m={m} tcId={target} hotkey={hotkey} onShoot={() => setOverlay('picker')} />
         {overlays}
       </>
     )
@@ -162,7 +173,7 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
         <button className="search" onClick={() => setOverlay('palette')}>
           <span>テストケースや操作を検索</span>
           <span className="kbd">
-            <b>{/Mac/.test(navigator.platform) ? '⌘' : 'Ctrl'}</b>
+            <b>{IS_MAC ? '⌘' : 'Ctrl'}</b>
             <b>K</b>
           </span>
         </button>
@@ -191,7 +202,9 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
           <Overview m={m} />
         )}
         {/* 表を編集する画面では、下に浮かぶボタンが表に重なるので出さない(ホットキーは使える) */}
-        {sel !== TABLE && <Shutter m={m} target={target} onPick={() => setOverlay('picker')} />}
+        {sel !== TABLE && (
+          <Shutter m={m} target={target} hotkey={hotkey} onPick={() => setOverlay('picker')} />
+        )}
       </main>
       {overlays}
     </div>
