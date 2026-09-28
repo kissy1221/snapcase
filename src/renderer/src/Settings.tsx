@@ -91,6 +91,28 @@ export default function SettingsDialog({ onClose }: { onClose: () => void }): Re
               }}
             />
           </label>
+          <div className="field">
+            <span className="lbl">判定のホットキー（ここを押した状態で、使いたいキーを押す）</span>
+            <span className="inline">
+              {(['OK', 'NG', '保留'] as const).map((r) => (
+                <label key={r}>
+                  {r}
+                  <input
+                    className="hotkey"
+                    readOnly
+                    value={label(s.verdictHotkeys[r])}
+                    onKeyDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      const acc = toAccelerator(e)
+                      if (acc && acc !== s.verdictHotkeys[r])
+                        update({ verdictHotkeys: { ...s.verdictHotkeys, [r]: acc } })
+                    }}
+                  />
+                </label>
+              ))}
+            </span>
+          </div>
           {error && <p className="error">{error}</p>}
           <div className="field">
             <span className="lbl">テーマ</span>
