@@ -27,14 +27,25 @@ export interface Rect {
 
 export const COLORS = ['#e5484d', '#f5b400', '#3b82f6', '#22a06b']
 
+export type Thickness = 'thin' | 'std' | 'thick'
+export const THICKNESSES: { id: Thickness; label: string }[] = [
+  { id: 'thin', label: '細' },
+  { id: 'std', label: '標準' },
+  { id: 'thick', label: '太' }
+]
+const THICKNESS_SCALE: Record<Thickness, number> = { thin: 0.6, std: 1, thick: 1.6 }
+
 const FONT = '"IBM Plex Sans JP", "Hiragino Sans", "Yu Gothic UI", sans-serif'
 const PAD = 0.5 // 文字の余白(文字サイズの倍率)
 
-/** 画像の大きさに応じた線幅・文字サイズ。 */
-export const sizes = (imgW: number): { lw: number; fs: number } => ({
-  lw: Math.max(3, Math.round(imgW / 400)),
-  fs: Math.max(16, Math.round(imgW / 70))
-})
+/** 画像の大きさに応じた線幅・文字サイズ。thickness で太さ調整の倍率をかける。 */
+export const sizes = (imgW: number, thickness: Thickness = 'std'): { lw: number; fs: number } => {
+  const scale = THICKNESS_SCALE[thickness]
+  return {
+    lw: Math.max(1, Math.round(Math.max(3, Math.round(imgW / 400)) * scale)),
+    fs: Math.max(10, Math.round(Math.max(16, Math.round(imgW / 70)) * scale))
+  }
+}
 
 function textBox(
   ctx: CanvasRenderingContext2D,

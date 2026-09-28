@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { EditorItem } from '../../shared/api'
-import { COLORS, bake, drawArrow, render, sizes, type Item, type Rect } from './annotate'
+import {
+  COLORS,
+  THICKNESSES,
+  bake,
+  drawArrow,
+  render,
+  sizes,
+  type Item,
+  type Rect,
+  type Thickness
+} from './annotate'
 import './assets/editor.css'
 
 type Tool = 'rect' | 'arrow' | 'callout' | 'text' | 'mask' | 'crop'
@@ -35,6 +45,12 @@ interface Doc {
 type Draft = { tool: Tool; x0: number; y0: number; x1: number; y1: number }
 type Input = { kind: 'callout' | 'text'; x: number; y: number; tx: number; ty: number }
 
+const THICKNESS_KEY = 'ed-thickness'
+const savedThickness = (): Thickness => {
+  const v = localStorage.getItem(THICKNESS_KEY)
+  return v === 'thin' || v === 'thick' ? v : 'std'
+}
+
 const norm = (d: Draft): Rect => ({
   x: Math.min(d.x0, d.x1),
   y: Math.min(d.y0, d.y1),
@@ -62,6 +78,7 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
   const [past, setPast] = useState<Doc[]>([])
   const [tool, setTool] = useState<Tool>('rect')
   const [color, setColor] = useState(COLORS[0])
+  const [thickness, setThicknessState] = useState<Thickness>(savedThickness)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [input, setInput] = useState<Input | null>(null)
   const [comment, setComment] = useState('')
@@ -82,7 +99,11 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
     () => doc.crop ?? { x: 0, y: 0, w: img?.naturalWidth ?? 1, h: img?.naturalHeight ?? 1 },
     [doc.crop, img]
   )
-  const sz = sizes(img?.naturalWidth ?? 1000)
+  const sz = sizes(img?.naturalWidth ?? 1000, thickness)
+  const setThickness = (t: Thickness): void => {
+    setThicknessState(t)
+    localStorage.setItem(THICKNESS_KEY, t)
+  }
 
   const commit = useCallback(
     (next: Doc) => {
@@ -227,13 +248,18 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
     await window.api.editor.save({ png: await bake(img, doc.items, doc.crop), comment, tcId })
   }
   const discard = (): void => {
-    if (!busy) window.api.editor.discard()
+    if (busy) return
+    if (doc.items.length && !window.confirm('描いた注釈を破棄しますか?')) return
+    window.api.editor.discard()
   }
 
   useEffect(() => {
     const h = (e: KeyboardEvent): void => {
       const typing = (e.target as HTMLElement).matches('input, textarea, select')
-      if (e.key === 'Escape' && !input) return discard()
+      if (e.key === 'Escape' && !input) {
+        if (draft) return setDraft(null)
+        return discard()
+      }
       if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !typing) {
         e.preventDefault()
         return undo()
@@ -285,6 +311,17 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
               aria-pressed={color === c}
               onClick={() => setColor(c)}
             />
+          ))}
+          <span className="sep" />
+          {THICKNESSES.map((t) => (
+            <button
+              key={t.id}
+              className={thickness === t.id ? 'on' : ''}
+              aria-pressed={thickness === t.id}
+              onClick={() => setThickness(t.id)}
+            >
+              {t.label}
+            </button>
           ))}
           <span className="sep" />
           <button onClick={undo} disabled={!past.length} aria-label="元に戻す">
@@ -351,7 +388,6 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.nativeEvent.isComposing) void save()
           }}
-          autoFocus
         />
         <div className="src">
           {item.title && <span>{item.title}</span>}
