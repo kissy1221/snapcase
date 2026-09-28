@@ -1,7 +1,7 @@
 {
   "name": "snapcase",
   "productName": "Snapcase",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Snapcase: 手動テストのスクリーンショットと結果を、テストケースごとに残すアプリ",
   "main": "./out/main/index.js",
   "author": "",
