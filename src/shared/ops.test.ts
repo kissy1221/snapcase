@@ -79,6 +79,28 @@ describe('並べ替え', () => {
   })
 })
 
+describe('フォルダの名前変更・削除', () => {
+  const groups = (m: Manifest): string[] => m.testcases.map((t) => t.group)
+  it('renameGroup は属する全テストケースを書き換え、既存フォルダと同名なら統合される', () => {
+    let m = run(base(), { t: 'renameGroup', from: 'g1', to: 'x' })
+    expect(groups(m)).toEqual(['x', 'g2', 'x', ''])
+    m = run(base(), { t: 'renameGroup', from: 'g1', to: 'g2' })
+    expect(orderedGroups(m).map((g) => [g.name, g.indexes.length])).toEqual([
+      ['g2', 3],
+      [GROUP_NONE, 1]
+    ])
+  })
+  it('renameGroup は未分類も名前を付けられる', () => {
+    const m = run(base(), { t: 'renameGroup', from: GROUP_NONE, to: 'x' })
+    expect(groups(m)).toEqual(['g1', 'g2', 'g1', 'x'])
+  })
+  it('deleteGroup はテストケースを消さず未分類へ移す', () => {
+    const m = run(base(), { t: 'deleteGroup', name: 'g1' })
+    expect(ids(m)).toEqual(['A', 'B', 'C', 'D'])
+    expect(groups(m)).toEqual(['', 'g2', '', ''])
+  })
+})
+
 describe('記録とブロック', () => {
   const withEntries = (): Manifest =>
     run(

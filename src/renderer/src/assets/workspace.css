@@ -107,6 +107,14 @@
   font-weight: 400;
   color: var(--ink3);
 }
+.folder-head .menu {
+  opacity: 0;
+}
+.folder-head:hover .menu,
+.folder-head:focus-within .menu,
+.folder-head .menu:has([aria-expanded='true']) {
+  opacity: 1;
+}
 .tc {
   display: flex;
   align-items: center;

@@ -103,6 +103,25 @@ export async function deleteTestCase(id: string): Promise<void> {
   undoToast(`${id} を削除しました`)
 }
 
+/** フォルダ名をまとめて変える。属する全テストケースの group を書き換え、既存フォルダと同名なら自然に統合される。 */
+export async function renameGroup(from: string, to: string): Promise<void> {
+  await window.api.apply({ t: 'renameGroup', from, to })
+  undoToast(`「${from}」を「${to}」に変更しました`)
+}
+
+/** フォルダを削除する。属するテストケースは未分類に移すだけで、テストケース自体は消さない。 */
+export async function deleteGroup(m: Manifest, name: string): Promise<void> {
+  const n = orderedGroups(m).find((g) => g.name === name)?.indexes.length ?? 0
+  const ok = await confirmAsk({
+    title: `「${name}」を削除しますか？`,
+    message: `属する${n}件のテストケースを未分類に移します。テストケース自体は削除されません。削除したあとも、⌘Z（Ctrl+Z）か「元に戻す」で戻せます。`,
+    okLabel: '削除する'
+  })
+  if (!ok) return
+  await window.api.apply({ t: 'deleteGroup', name })
+  undoToast(`「${name}」を削除しました`)
+}
+
 /** テストケースを複製する。記録(画像)は複製せず、記載欄だけを写す。 */
 export async function duplicateTestCase(m: Manifest, tc: TestCase): Promise<void> {
   const rest: Partial<TestCase> = { ...tc }
