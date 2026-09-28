@@ -340,7 +340,6 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.nativeEvent.isComposing) void save()
           }}
-          autoFocus
         />
         <div className="src">
           {item.title && <span>{item.title}</span>}
