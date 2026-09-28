@@ -216,13 +216,18 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
     await window.api.editor.save({ png: await bake(img, doc.items, doc.crop), comment, tcId })
   }
   const discard = (): void => {
-    if (!busy) window.api.editor.discard()
+    if (busy) return
+    if (doc.items.length && !window.confirm('描いた注釈を破棄しますか?')) return
+    window.api.editor.discard()
   }
 
   useEffect(() => {
     const h = (e: KeyboardEvent): void => {
       const typing = (e.target as HTMLElement).matches('input, textarea, select')
-      if (e.key === 'Escape' && !input) return discard()
+      if (e.key === 'Escape' && !input) {
+        if (draft) return setDraft(null)
+        return discard()
+      }
       if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !typing) {
         e.preventDefault()
         return undo()
