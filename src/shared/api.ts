@@ -7,6 +7,8 @@ export type Theme = 'system' | 'light' | 'dark'
 export interface Settings {
   /** 撮影のグローバルホットキー(Electron の accelerator 形式) */
   hotkey: string
+  /** 判定(OK / NG / 保留)を付けるグローバルホットキー */
+  verdictHotkeys: Record<'OK' | 'NG' | '保留', string>
   /** 撮影後に編集画面を開く。オフなら注釈・コメント無しでそのまま保存する。 */
   openEditor: boolean
   /** セッションの保存先。空なら「書類/Snapcase」。 */
@@ -21,6 +23,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   hotkey: 'Control+Alt+S',
+  verdictHotkeys: { OK: 'Control+Alt+1', NG: 'Control+Alt+2', 保留: 'Control+Alt+3' },
   openEditor: true,
   dataDir: '',
   exportOnClose: [],

@@ -45,21 +45,29 @@ protocol.registerSchemesAsPrivileged([
 const takeShot = (p: Pending): Promise<void> | void =>
   getSettings().openEditor ? enqueue([p]) : saveDirect(p)
 
+type HotkeyId = 'hotkey' | 'OK' | 'NG' | '保留'
+const hotkeyAction: Record<HotkeyId, () => void> = {
+  hotkey: () => void captureHotkey(),
+  OK: () => void verdictHotkey('OK'),
+  NG: () => void verdictHotkey('NG'),
+  保留: () => void verdictHotkey('保留')
+}
+const registered: Partial<Record<HotkeyId, string>> = {}
+
 /** ホットキーを登録し直す。登録できなければ元に戻して false。 */
-function registerHotkey(next: string): boolean {
-  const prev = registered
+function registerHotkey(id: HotkeyId, next: string): boolean {
+  const prev = registered[id]
   if (prev) globalShortcut.unregister(prev)
   let ok = false
   try {
-    ok = globalShortcut.register(next, () => void captureHotkey())
+    ok = globalShortcut.register(next, hotkeyAction[id])
   } catch {
     ok = false
   }
-  if (!ok && prev) globalShortcut.register(prev, () => void captureHotkey())
-  if (ok) registered = next
+  if (!ok && prev) globalShortcut.register(prev, hotkeyAction[id])
+  if (ok) registered[id] = next
   return ok
 }
-let registered = ''
 
 function notify(body: string): void {
   sendToast({ msg: body })
@@ -82,6 +90,21 @@ async function captureHotkey(): Promise<void> {
   }
 }
 
+/** 判定の入口(ホットキー)。開いているテストケースに OK / NG / 保留 を付ける。 */
+async function verdictHotkey(result: 'OK' | 'NG' | '保留'): Promise<void> {
+  const tcId = targetTestCase()
+  if (!state.session || !tcId) {
+    state.mainWindow?.show()
+    return notify(
+      state.session ? '先にテストケースを追加してください。' : '先にセッションを開いてください。'
+    )
+  }
+  await state.session.apply({ t: 'updateTestCase', id: tcId, patch: { result } })
+  broadcast()
+  const title = state.session.manifest.testcases.find((t) => t.id === tcId)?.title ?? tcId
+  notify(`${title} を「${result}」にしました`)
+}
+
 const extOk = ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'tif', 'tiff']
 const mimeOf = (name: string): string => {
   const e = name.split('.').pop()?.toLowerCase() ?? ''
@@ -94,7 +117,9 @@ export function registerIpc(): void {
     if (!state.session || !name) return new Response(null, { status: 404 })
     return net.fetch(pathToFileURL(join(state.session.imageDir, name)).toString())
   })
-  registerHotkey(getSettings().hotkey)
+  registerHotkey('hotkey', getSettings().hotkey)
+  const vh = getSettings().verdictHotkeys
+  for (const r of ['OK', 'NG', '保留'] as const) registerHotkey(r, vh[r])
 
   ipcMain.handle('sessions:list', () => listSessions(root()))
   ipcMain.handle('session:open', async (_e, name: string) => {
@@ -131,8 +156,19 @@ export function registerIpc(): void {
 
   ipcMain.handle('settings:get', () => getSettings())
   ipcMain.handle('settings:set', (_e, patch: Partial<Settings>) => {
-    if (patch.hotkey && patch.hotkey !== registered && !registerHotkey(patch.hotkey))
+    if (
+      patch.hotkey &&
+      patch.hotkey !== registered.hotkey &&
+      !registerHotkey('hotkey', patch.hotkey)
+    )
       return { error: `${patch.hotkey} は他のアプリが使っているため登録できませんでした。` }
+    if (patch.verdictHotkeys) {
+      for (const r of ['OK', 'NG', '保留'] as const) {
+        const next = patch.verdictHotkeys[r]
+        if (next && next !== registered[r] && !registerHotkey(r, next))
+          return { error: `${next} は他のアプリが使っているため登録できませんでした。` }
+      }
+    }
     const before = getSettings()
     const settings = saveSettings(patch)
     if (patch.theme) nativeTheme.themeSource = patch.theme
