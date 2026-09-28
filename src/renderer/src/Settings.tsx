@@ -142,6 +142,14 @@ export default function SettingsDialog({ onClose }: { onClose: () => void }): Re
               </small>
             </span>
           </label>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={s.autoAdvance}
+              onChange={(e) => update({ autoAdvance: e.target.checked })}
+            />
+            <span>判定したら次の未実施へ移る</span>
+          </label>
           <div className="field">
             <span className="lbl">閉じるときに書き出す形式</span>
             <span className="inline">

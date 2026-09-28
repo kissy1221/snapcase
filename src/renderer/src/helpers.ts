@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { nextTcId } from '../../shared/ops'
+import { nextTcId, orderedGroups } from '../../shared/ops'
 import type { Manifest, Result, TestCase } from '../../shared/types'
 import { OVERVIEW, confirmAsk, getManifest, getSelection, select, toast } from './store'
 
@@ -30,6 +30,18 @@ export const HOTKEY_LABEL = /Mac/.test(navigator.platform) ? ['⌃', '⌥', 'S']
 /** 撮影先。開いているテストケース、無ければ最後のもの(main の targetTestCase と同じ規則)。 */
 export const targetOf = (m: Manifest): string | null =>
   m.testcases.find((t) => t.id === getSelection())?.id ?? m.testcases.at(-1)?.id ?? null
+
+/** 判定を付ける。設定がオンなら、並び順で次の未実施のテストケースを開く(無ければ移らない)。 */
+export async function setResult(m: Manifest, tc: TestCase, result: Result): Promise<void> {
+  await window.api.apply({ t: 'updateTestCase', id: tc.id, patch: { result } })
+  const s = await window.api.getSettings()
+  if (!s.autoAdvance) return
+  const order = orderedGroups(m).flatMap((g) => g.indexes.map((i) => m.testcases[i]))
+  const next = order
+    .slice(order.findIndex((t) => t.id === tc.id) + 1)
+    .find((t) => t.result === '未実施')
+  if (next) select(next.id)
+}
 
 /** ドロップ・貼り付けされた画像ファイルを取り込む。画像が無ければ false。 */
 export async function addImageFiles(files: FileList | File[]): Promise<boolean> {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { RESULTS } from '../../shared/constants'
 import { orderedGroups } from '../../shared/ops'
 import type { Manifest, TestCase } from '../../shared/types'
-import { HOTKEY_LABEL, RESULT_CLASS, addTestCase } from './helpers'
+import { HOTKEY_LABEL, RESULT_CLASS, addTestCase, setResult } from './helpers'
 import { select } from './store'
 import { AutoText } from './ui'
 
@@ -70,9 +70,7 @@ export default function Compact({
                 role="radio"
                 aria-checked={tc.result === r}
                 className={tc.result === r ? 'on ' + RESULT_CLASS[r] : ''}
-                onClick={() =>
-                  window.api.apply({ t: 'updateTestCase', id: tc.id, patch: { result: r } })
-                }
+                onClick={() => setResult(m, tc, r)}
               >
                 {r}
               </button>

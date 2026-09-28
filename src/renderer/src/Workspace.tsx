@@ -9,6 +9,7 @@ import {
   addTestCase,
   dropFiles,
   importTestCases,
+  setResult,
   targetOf,
   useCompact
 } from './helpers'
@@ -103,7 +104,7 @@ export default function Workspace({ m }: { m: Manifest }): React.JSX.Element {
         list.push({
           id: 'r' + r,
           label: `判定を ${r} にする（${cur.id}）`,
-          run: () => window.api.apply({ t: 'updateTestCase', id: cur.id, patch: { result: r } })
+          run: () => setResult(m, cur, r)
         })
     for (const g of orderedGroups(m))
       for (const i of g.indexes) {
