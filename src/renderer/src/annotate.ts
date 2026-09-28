@@ -17,6 +17,7 @@ export type Item =
     }
   | { k: 'text'; x: number; y: number; text: string; color: string; fs: number }
   | { k: 'mask'; x: number; y: number; w: number; h: number }
+  | { k: 'mosaic'; x: number; y: number; w: number; h: number }
 
 export interface Rect {
   x: number
@@ -120,7 +121,36 @@ export function drawArrow(
   arrowHead(ctx, x0, y0, x1, y1, lw)
 }
 
-export function drawItem(ctx: CanvasRenderingContext2D, it: Item): void {
+const MOSAIC_BLOCK = 14 // 元の文字が読み取れない粗さ(画像ピクセル基準)
+
+/** 指定範囲を粗いブロックに置き換える(モザイク)。ぼかしと違い、元の値は復元できない。 */
+export function pixelate(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  view: Rect
+): void {
+  const cx = Math.max(0, Math.round(x - view.x))
+  const cy = Math.max(0, Math.round(y - view.y))
+  const cw = Math.min(Math.round(w), ctx.canvas.width - cx)
+  const ch = Math.min(Math.round(h), ctx.canvas.height - cy)
+  if (cw <= 0 || ch <= 0) return
+  const bw = Math.max(1, Math.round(cw / MOSAIC_BLOCK))
+  const bh = Math.max(1, Math.round(ch / MOSAIC_BLOCK))
+  const tmp = document.createElement('canvas')
+  tmp.width = bw
+  tmp.height = bh
+  tmp.getContext('2d')!.drawImage(ctx.canvas, cx, cy, cw, ch, 0, 0, bw, bh)
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.imageSmoothingEnabled = false
+  ctx.drawImage(tmp, 0, 0, bw, bh, cx, cy, cw, ch)
+  ctx.restore()
+}
+
+export function drawItem(ctx: CanvasRenderingContext2D, it: Item, view: Rect): void {
   switch (it.k) {
     case 'rect':
       ctx.strokeStyle = it.color
@@ -133,6 +163,9 @@ export function drawItem(ctx: CanvasRenderingContext2D, it: Item): void {
     case 'mask':
       ctx.fillStyle = '#000'
       ctx.fillRect(it.x, it.y, it.w, it.h)
+      break
+    case 'mosaic':
+      pixelate(ctx, it.x, it.y, it.w, it.h, view)
       break
     case 'text':
       drawLabel(ctx, it.x, it.y, it.text, it.color, it.fs, false)
@@ -176,7 +209,7 @@ export function render(
   ctx.save()
   ctx.translate(-view.x, -view.y)
   ctx.drawImage(img, 0, 0)
-  items.forEach((it) => drawItem(ctx, it))
+  items.forEach((it) => drawItem(ctx, it, view))
   ctx.restore()
 }
 

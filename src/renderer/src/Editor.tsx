@@ -5,6 +5,7 @@ import {
   THICKNESSES,
   bake,
   drawArrow,
+  pixelate,
   render,
   sizes,
   type Item,
@@ -13,7 +14,7 @@ import {
 } from './annotate'
 import './assets/editor.css'
 
-type Tool = 'rect' | 'arrow' | 'callout' | 'text' | 'mask' | 'crop'
+type Tool = 'rect' | 'arrow' | 'callout' | 'text' | 'mask' | 'mosaic' | 'crop'
 const TOOLS: { id: Tool; label: string; key: string; hint: string }[] = [
   { id: 'rect', label: '枠', key: 'R', hint: 'ドラッグして枠を描く' },
   { id: 'arrow', label: '矢印', key: 'A', hint: 'ドラッグして矢印を描く。始点から終点へ向く' },
@@ -29,6 +30,12 @@ const TOOLS: { id: Tool; label: string; key: string; hint: string }[] = [
     label: '黒塗り',
     key: 'M',
     hint: '隠したい範囲をドラッグ。保存した画像に焼き込まれ、元の値は残りません'
+  },
+  {
+    id: 'mosaic',
+    label: 'モザイク',
+    key: 'B',
+    hint: 'ドラッグした範囲を読み取れない粗さにします。確実に隠したい値は黒塗りを使ってください'
   },
   {
     id: 'crop',
@@ -150,6 +157,8 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
     } else if (draft.tool === 'mask') {
       ctx.fillStyle = 'rgba(0,0,0,.6)'
       ctx.fillRect(r.x, r.y, r.w, r.h)
+    } else if (draft.tool === 'mosaic') {
+      pixelate(ctx, r.x, r.y, r.w, r.h, view)
     } else if (draft.tool === 'crop') {
       ctx.fillStyle = 'rgba(0,0,0,.55)'
       ctx.beginPath()
@@ -209,6 +218,8 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
         ]
       })
     if (draft.tool === 'mask' && big) commit({ ...doc, items: [...doc.items, { k: 'mask', ...r }] })
+    if (draft.tool === 'mosaic' && big)
+      commit({ ...doc, items: [...doc.items, { k: 'mosaic', ...r }] })
     if (draft.tool === 'crop' && big)
       commit({
         ...doc,
