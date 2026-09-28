@@ -7,6 +7,13 @@ import { getSettings } from './settings'
 import { state } from './state'
 import icon from '../../resources/icon.png?asset'
 
+// Windows のタイトルバー操作ボタンの色。renderer の --paper / --ink (main.css) と揃える。
+function titleBarOverlay(): Electron.TitleBarOverlayOptions {
+  return nativeTheme.shouldUseDarkColors
+    ? { color: '#1e2127', symbolColor: '#e7e9ee', height: 44 }
+    : { color: '#f3f4f6', symbolColor: '#1c2230', height: 44 }
+}
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -22,9 +29,7 @@ function createWindow(): void {
     ...(process.platform === 'darwin' && getSettings().glass > 0
       ? { vibrancy: 'sidebar', visualEffectState: 'active' }
       : {}),
-    ...(process.platform === 'win32'
-      ? { titleBarOverlay: { color: '#f3f4f6', symbolColor: '#1c2230', height: 44 } }
-      : {}),
+    ...(process.platform === 'win32' ? { titleBarOverlay: titleBarOverlay() } : {}),
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -76,6 +81,12 @@ app.whenReady().then(() => {
     })
 
   nativeTheme.themeSource = getSettings().theme
+
+  if (process.platform === 'win32') {
+    nativeTheme.on('updated', () => {
+      for (const win of BrowserWindow.getAllWindows()) win.setTitleBarOverlay(titleBarOverlay())
+    })
+  }
 
   registerIpc()
 
