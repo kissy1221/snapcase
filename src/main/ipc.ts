@@ -27,7 +27,7 @@ import { getSettings, saveSettings } from './settings'
 import type { ExportFormat, Settings } from '../shared/api'
 import { exportSession, scheduleLiveOutputs } from './export'
 import { loadTestCases } from './import'
-import { listSessions, Session } from './session'
+import { listSessions, renameSession, Session } from './session'
 import { broadcast, sendToast, state, targetTestCase } from './state'
 
 // SNAPCASE_DATA_DIR は自動テスト用。実データを汚さないために保存先を差し替える。
@@ -104,6 +104,26 @@ export function registerIpc(): void {
     state.selectedTc = null
     broadcast()
     return state.session.manifest
+  })
+  ipcMain.handle('session:rename', async (_e, from: string, to: string) => {
+    // Home はセッションを閉じているときしか出ないが、念のため開いているものは対象から外す。
+    if (state.session && basename(state.session.dir) === from)
+      return { error: '開いているセッションは操作できません' }
+    try {
+      return await renameSession(root(), from, to)
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : '名前を変更できませんでした' }
+    }
+  })
+  ipcMain.handle('session:delete', async (_e, name: string) => {
+    if (state.session && basename(state.session.dir) === name)
+      return { error: '開いているセッションは操作できません' }
+    try {
+      await shell.trashItem(join(root(), name))
+      return undefined
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : 'ごみ箱に移動できませんでした' }
+    }
   })
   ipcMain.handle('session:close', async () => {
     await exportOnClose()

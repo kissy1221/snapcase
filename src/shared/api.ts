@@ -45,6 +45,10 @@ export interface Api {
   listSessions(): Promise<SessionSummary[]>
   /** 無ければ作り、あれば続きから開く。 */
   openSession(name: string): Promise<Manifest>
+  /** フォルダ名と manifest の session を揃えて名前を変える。既存の名前と重なる・開いている場合は変えない。 */
+  renameSession(from: string, to: string): Promise<{ error: string } | { name: string }>
+  /** ごみ箱へ移す。開いているセッションは対象にできない。 */
+  deleteSession(name: string): Promise<{ error: string } | undefined>
   closeSession(): Promise<void>
   apply(op: Op): Promise<void>
   /** 1つ前の状態に戻す / やり直す。動かせたときだけ true。 */
