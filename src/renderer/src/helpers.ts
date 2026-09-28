@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from 'react'
-import { GROUP_NONE } from '../../shared/constants'
 import { nextTcId, orderedGroups } from '../../shared/ops'
 import type { Manifest, Result, TestCase } from '../../shared/types'
 import { OVERVIEW, confirmAsk, getManifest, getSelection, select, toast } from './store'
@@ -105,12 +104,9 @@ export async function deleteTestCase(id: string): Promise<void> {
 }
 
 /** フォルダ名をまとめて変える。属する全テストケースの group を書き換え、既存フォルダと同名なら自然に統合される。 */
-export async function renameGroup(name: string): Promise<void> {
-  const to = window.prompt('新しいフォルダ名', name === GROUP_NONE ? '' : name)
-  const trimmed = to?.trim()
-  if (!trimmed || trimmed === name) return
-  await window.api.apply({ t: 'renameGroup', from: name, to: trimmed })
-  undoToast(`「${name}」を「${trimmed}」に変更しました`)
+export async function renameGroup(from: string, to: string): Promise<void> {
+  await window.api.apply({ t: 'renameGroup', from, to })
+  undoToast(`「${from}」を「${to}」に変更しました`)
 }
 
 /** フォルダを削除する。属するテストケースは未分類に移すだけで、テストケース自体は消さない。 */

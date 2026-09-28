@@ -14,10 +14,54 @@ import {
 } from './helpers'
 import { Menu, type MenuItem } from './Menu'
 import { OVERVIEW, TABLE, select, useSelection } from './store'
+import { Dialog } from './ui'
+
+/** フォルダ名を変えるダイアログ。空・変更なしなら何もしない。 */
+function RenameGroupDialog({
+  name,
+  onClose
+}: {
+  name: string
+  onClose: () => void
+}): React.JSX.Element {
+  const [next, setNext] = useState(name === GROUP_NONE ? '' : name)
+  return (
+    <Dialog title="フォルダ名を変更" onClose={onClose}>
+      <form
+        className="form"
+        onSubmit={(e) => {
+          e.preventDefault()
+          const to = next.trim()
+          if (to && to !== name) renameGroup(name, to)
+          onClose()
+        }}
+      >
+        <label>
+          フォルダ名
+          <input
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+            aria-label="フォルダ名"
+            autoFocus
+          />
+        </label>
+        <div className="actions">
+          <button type="button" onClick={onClose}>
+            キャンセル
+          </button>
+          <button type="submit" className="primary" disabled={!next.trim()}>
+            変更する
+          </button>
+        </div>
+      </form>
+    </Dialog>
+  )
+}
 
 export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
   const sel = useSelection()
   const [over, setOver] = useState<string | null>(null) // ドロップ位置の強調
+  const [renaming, setRenaming] = useState<string | null>(null)
   const groups = orderedGroups(m)
   const counts = RESULTS.map((r) => [r, m.testcases.filter((t) => t.result === r).length] as const)
 
@@ -29,7 +73,7 @@ export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
   }
 
   const groupMenu = (name: string): MenuItem[] => [
-    { label: '名前を変更', run: () => renameGroup(name) },
+    { label: '名前を変更', run: () => setRenaming(name) },
     { label: '削除', danger: true, disabled: name === GROUP_NONE, run: () => deleteGroup(m, name) }
   ]
 
@@ -209,6 +253,7 @@ export default function Sidebar({ m }: { m: Manifest }): React.JSX.Element {
           </>
         )}
       </div>
+      {renaming !== null && <RenameGroupDialog name={renaming} onClose={() => setRenaming(null)} />}
     </aside>
   )
 }
