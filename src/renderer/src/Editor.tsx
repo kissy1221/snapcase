@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { EditorItem } from '../../shared/api'
-import { COLORS, bake, render, sizes, type Item, type Rect } from './annotate'
+import { COLORS, bake, drawArrow, render, sizes, type Item, type Rect } from './annotate'
 import './assets/editor.css'
 
-type Tool = 'rect' | 'callout' | 'text' | 'mask' | 'crop'
+type Tool = 'rect' | 'arrow' | 'callout' | 'text' | 'mask' | 'crop'
 const TOOLS: { id: Tool; label: string; key: string; hint: string }[] = [
   { id: 'rect', label: '枠', key: 'R', hint: 'ドラッグして枠を描く' },
+  { id: 'arrow', label: '矢印', key: 'A', hint: 'ドラッグして矢印を描く。始点から終点へ向く' },
   {
     id: 'callout',
     label: '吹き出し',
@@ -144,6 +145,8 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
       ctx.moveTo(draft.x0, draft.y0)
       ctx.lineTo(draft.x1, draft.y1)
       ctx.stroke()
+    } else if (draft.tool === 'arrow') {
+      drawArrow(ctx, draft.x0, draft.y0, draft.x1, draft.y1, color, sz.lw)
     }
     ctx.restore()
   }, [img, doc, draft, view, color, sz.lw])
@@ -176,6 +179,14 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
     const big = r.w > 4 && r.h > 4
     if (draft.tool === 'rect' && big)
       commit({ ...doc, items: [...doc.items, { k: 'rect', ...r, color, lw: sz.lw }] })
+    if (draft.tool === 'arrow' && Math.hypot(draft.x1 - draft.x0, draft.y1 - draft.y0) > 8)
+      commit({
+        ...doc,
+        items: [
+          ...doc.items,
+          { k: 'arrow', x0: draft.x0, y0: draft.y0, x1: draft.x1, y1: draft.y1, color, lw: sz.lw }
+        ]
+      })
     if (draft.tool === 'mask' && big) commit({ ...doc, items: [...doc.items, { k: 'mask', ...r }] })
     if (draft.tool === 'crop' && big)
       commit({

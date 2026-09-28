@@ -2,6 +2,7 @@
 
 export type Item =
   | { k: 'rect'; x: number; y: number; w: number; h: number; color: string; lw: number }
+  | { k: 'arrow'; x0: number; y0: number; x1: number; y1: number; color: string; lw: number }
   | {
       k: 'callout'
       /** しっぽの先 */
@@ -70,12 +71,53 @@ function drawLabel(
   return b
 }
 
+/** 矢印の先端の「くの字」。(x0, y0) → (x1, y1) の向きに合わせる。 */
+function arrowHead(
+  ctx: CanvasRenderingContext2D,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  lw: number
+): void {
+  const angle = Math.atan2(y1 - y0, x1 - x0)
+  const len = lw * 4
+  const spread = Math.PI / 7
+  ctx.beginPath()
+  ctx.moveTo(x1 - len * Math.cos(angle - spread), y1 - len * Math.sin(angle - spread))
+  ctx.lineTo(x1, y1)
+  ctx.lineTo(x1 - len * Math.cos(angle + spread), y1 - len * Math.sin(angle + spread))
+  ctx.stroke()
+}
+
+/** 矢印の描画。ライブプレビューと本描画の両方から呼ぶ。 */
+export function drawArrow(
+  ctx: CanvasRenderingContext2D,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  color: string,
+  lw: number
+): void {
+  ctx.strokeStyle = color
+  ctx.lineWidth = lw
+  ctx.beginPath()
+  ctx.moveTo(x0, y0)
+  ctx.lineTo(x1, y1)
+  ctx.stroke()
+  arrowHead(ctx, x0, y0, x1, y1, lw)
+}
+
 export function drawItem(ctx: CanvasRenderingContext2D, it: Item): void {
   switch (it.k) {
     case 'rect':
       ctx.strokeStyle = it.color
       ctx.lineWidth = it.lw
       ctx.strokeRect(it.x, it.y, it.w, it.h)
+      break
+    case 'arrow':
+      drawArrow(ctx, it.x0, it.y0, it.x1, it.y1, it.color, it.lw)
       break
     case 'mask':
       ctx.fillStyle = '#000'
