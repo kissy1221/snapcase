@@ -350,6 +350,8 @@ function EditorBody({ item }: { item: EditorItem }): React.JSX.Element {
             ref={canvas}
             className={tool === 'text' ? 'text-cursor' : ''}
             onPointerDown={onDown}
+            // 文字ツールは押下で入力欄を開く。既定の mousedown がフォーカスを奪うと即 blur で閉じてしまう
+            onMouseDown={(e) => e.preventDefault()}
             onPointerMove={onMove}
             onPointerUp={onUp}
           />
