@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { RESULTS } from '../../shared/constants'
 import { orderedGroups } from '../../shared/ops'
 import type { Manifest, TestCase } from '../../shared/types'
-import { HOTKEY_LABEL, RESULT_CLASS, addTestCase, setResult } from './helpers'
+import { RESULT_CLASS, addTestCase, hotkeyParts, setResult } from './helpers'
 import { select } from './store'
 import { AutoText } from './ui'
 
@@ -16,10 +16,12 @@ const FIELDS = [
 export default function Compact({
   m,
   tcId,
+  hotkey,
   onShoot
 }: {
   m: Manifest
   tcId: string | null
+  hotkey: string
   onShoot: () => void
 }): React.JSX.Element {
   const [pinned, setPinned] = useState(false)
@@ -107,7 +109,7 @@ export default function Compact({
             </span>
             <span className="label">撮影</span>
             <span className="kbd">
-              {HOTKEY_LABEL.map((k) => (
+              {hotkeyParts(hotkey).map((k) => (
                 <b key={k}>{k}</b>
               ))}
             </span>

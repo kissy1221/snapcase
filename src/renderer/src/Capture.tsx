@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
 import type { WindowChoice } from '../../shared/api'
 import type { Manifest } from '../../shared/types'
-import { addTestCase, HOTKEY_LABEL } from './helpers'
+import { addTestCase, hotkeyParts } from './helpers'
 import { Dialog } from './ui'
 
 /** 画面下部の撮影ボタン。押すと撮影するウィンドウを選べる(選択は親が開く)。 */
 export function Shutter({
   m,
   target,
+  hotkey,
   onPick
 }: {
   m: Manifest
   target: string | null
+  hotkey: string
   onPick: () => void
 }): React.JSX.Element {
   return (
@@ -21,7 +23,7 @@ export function Shutter({
       </span>
       <span className="label num">{target ? `${target} に撮影` : 'テストケースを追加'}</span>
       <span className="kbd">
-        {HOTKEY_LABEL.map((k) => (
+        {hotkeyParts(hotkey).map((k) => (
           <b key={k}>{k}</b>
         ))}
       </span>

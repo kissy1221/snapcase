@@ -1,16 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { ExportFormat, Settings, Theme } from '../../shared/api'
-import { applyGlass } from './helpers'
+import { applyGlass, hotkeyParts, IS_MAC } from './helpers'
 import { Dialog } from './ui'
-
-const MAC = /Mac/.test(navigator.platform)
-const SYMBOL: Record<string, string> = {
-  Control: MAC ? '⌃' : 'Ctrl',
-  Alt: MAC ? '⌥' : 'Alt',
-  Shift: MAC ? '⇧' : 'Shift',
-  Command: '⌘',
-  Super: 'Win'
-}
 
 /** キー入力を Electron の accelerator 文字列にする。修飾キーだけ・修飾キー無し(F キー以外)は null。 */
 function toAccelerator(e: React.KeyboardEvent): string | null {
@@ -19,7 +10,7 @@ function toAccelerator(e: React.KeyboardEvent): string | null {
     e.ctrlKey && 'Control',
     e.altKey && 'Alt',
     e.shiftKey && 'Shift',
-    e.metaKey && (MAC ? 'Command' : 'Super')
+    e.metaKey && (IS_MAC ? 'Command' : 'Super')
   ].filter(Boolean)
   const named: Record<string, string> = {
     ArrowUp: 'Up',
@@ -33,11 +24,7 @@ function toAccelerator(e: React.KeyboardEvent): string | null {
   return [...mods, key].join('+')
 }
 
-const label = (acc: string): string =>
-  acc
-    .split('+')
-    .map((k) => SYMBOL[k] ?? k)
-    .join(MAC ? '' : '+')
+const label = (acc: string): string => hotkeyParts(acc).join(IS_MAC ? '' : '+')
 
 const FORMATS: { id: ExportFormat; label: string }[] = [
   { id: 'pdf', label: 'PDF' },

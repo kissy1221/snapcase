@@ -25,7 +25,20 @@ export async function addTestCase(m: Manifest, group = '', open = true): Promise
   if (open) select(id)
 }
 
-export const HOTKEY_LABEL = /Mac/.test(navigator.platform) ? ['⌃', '⌥', 'S'] : ['Ctrl', 'Alt', 'S']
+const platformHint = (navigator as Navigator & { userAgentData?: { platform?: string } })
+  .userAgentData?.platform
+export const IS_MAC = /mac/i.test(platformHint ?? navigator.platform)
+
+const SYMBOL: Record<string, string> = {
+  Control: IS_MAC ? '⌃' : 'Ctrl',
+  Alt: IS_MAC ? '⌥' : 'Alt',
+  Shift: IS_MAC ? '⇧' : 'Shift',
+  Command: '⌘',
+  Super: 'Win'
+}
+
+/** ホットキーの accelerator 文字列(例: "Control+Alt+S")を、表示用の記号の並びにする。 */
+export const hotkeyParts = (acc: string): string[] => acc.split('+').map((k) => SYMBOL[k] ?? k)
 
 /** 撮影先。開いているテストケース、無ければ最後のもの(main の targetTestCase と同じ規則)。 */
 export const targetOf = (m: Manifest): string | null =>
